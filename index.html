@@ -5,12 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121826">
 <title>Planner de treino</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" crossorigin>
 <style>
 :root{
-  --bg:#121826; --surface:#1A2233; --raised:#242E44; --raised-hover:#2D3953; --line:#2E3A53;
+  --bg:#121826; /* mesma cor na meta theme-color e no manifest.json */
+  --surface:#1A2233; --raised:#242E44; --raised-hover:#2D3953; --line:#2E3A53;
   --text:#EEF1F7; --muted:#8D98AE; --placeholder:#6E7A93;
   --accent:#7C8CFF; --accent-hover:#949FFF; --accent-ink:#0D1233;
   --ok:#45D19A; --ok-ink:#06261A; --danger:#FF6B7A;
@@ -47,6 +51,7 @@ ul,ol{list-style:none}
 .nav button{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;color:var(--muted);font-weight:600;font-size:14px;transition:color .15s,background .15s}
 .nav button:hover{color:var(--text)}
 .nav button[aria-current="page"]{background:var(--raised);color:var(--text)}
+.instalar{margin-left:auto;background:var(--second);color:var(--second-ink)}
 
 /* Páginas */
 .page{max-width:760px;margin:0 auto;padding:28px 24px 48px;display:flex;flex-direction:column;gap:20px}
@@ -238,6 +243,7 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
   .topbar{position:static;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
   .bar{padding:0}
   .brand{display:none}
+  .instalar{margin:14px 16px 0 auto}
   .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;border-radius:0;justify-content:space-around;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(26,34,51,.97);border-top:1px solid var(--line)}
   .nav button{flex-direction:column;gap:2px;height:auto;padding:6px 14px;font-size:12px;border-radius:12px;min-width:76px}
   .nav button[aria-current="page"]{background:none;color:var(--accent)}
@@ -265,6 +271,7 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
 <header class="topbar">
   <div class="bar">
     <div class="brand"><span class="brand-mark" id="brand-mark"></span>Planner de treino</div>
+    <button class="btn small instalar" id="instalar" data-act="instalar" hidden>Instalar app</button>
     <nav class="nav" id="nav" aria-label="Seções"></nav>
   </div>
 </header>
@@ -294,6 +301,7 @@ const ICONS = {
   voltar: '<path d="M15 5l-7 7 7 7"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   chev: '<path d="M9 5l7 7-7 7"/>',
+  baixar: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   estrela: '<path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
 };
 const icon = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
@@ -1236,6 +1244,7 @@ document.addEventListener('click', ev => {
       break;
     }
     case 'periodo': ui.periodo = b.dataset.p; render(); break;
+    case 'instalar': instalarApp(); break;
     case 'finalizar-ex': finalizarEx(); break;
     case 'timer-play': playPause(); break;
     case 'timer-zerar': zerar(); break;
@@ -1336,8 +1345,32 @@ document.addEventListener('keydown', ev => {
   else if (ui.exAberto) fecharEx();
 });
 
+/* ---------- App instalável (PWA) ---------- */
+// Guarda o app no aparelho para abrir sem internet (o navegador só permite isso em http/https)
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Modo sem internet indisponível:', err));
+  });
+}
+
+// Quando o Chrome avisa que o app pode ser instalado, aparece o botão "Instalar app"
+let pedidoInstalar = null;
+function definirPedido(e) {
+  pedidoInstalar = e;
+  $('#instalar').hidden = !e;
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); definirPedido(e); });
+window.addEventListener('appinstalled', () => { definirPedido(null); toast('App instalado. Ele está na tela inicial.'); });
+async function instalarApp() {
+  if (!pedidoInstalar) return;
+  pedidoInstalar.prompt();
+  await pedidoInstalar.userChoice;
+  definirPedido(null);
+}
+
 /* ---------- Início ---------- */
 $('#brand-mark').innerHTML = icon('treinos', 18);
+$('#instalar').insertAdjacentHTML('afterbegin', icon('baixar', 18));
 $('#nav').innerHTML = [['hoje', 'Hoje'], ['treinos', 'Treinos'], ['historico', 'Histórico']]
   .map(([k, nome]) => `<button data-act="tab" data-tab="${k}">${icon(k)}<span>${nome}</span></button>`).join('');
 render(true);
