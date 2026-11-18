@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#121826">
+<meta name="theme-color" content="#1A1815">
 <title>Planner de treino</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -13,17 +13,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" crossorigin>
 <style>
 :root{
-  --bg:#121826; /* mesma cor na meta theme-color e no manifest.json */
-  --surface:#1A2233; --raised:#242E44; --raised-hover:#2D3953; --line:#2E3A53;
-  --text:#EEF1F7; --muted:#8D98AE; --placeholder:#6E7A93;
-  --accent:#7C8CFF; --accent-hover:#949FFF; --accent-ink:#0D1233;
-  --ok:#45D19A; --ok-ink:#06261A; --danger:#FF6B7A;
+  /* Grafite com um toque quente (sem azul) */
+  --bg:#1A1815; /* mesma cor na meta theme-color, no manifest.json e em --bg-glass */
+  --surface:#24221F; --raised:#312E2A; --raised-hover:#3D3935; --line:#3D3A35;
+  --bg-glass:rgba(26,24,21,.88); --surface-glass:rgba(36,34,31,.97); --scrim:rgba(7,6,5,.72);
+  --text:#F3F0ED; --muted:#9D9790; --placeholder:#7F7972;
+  /* Cor principal: laranja tangerina (botões de ação, logo, foco, aba ativa) */
+  --accent:#FF933F; --accent-hover:#FFA963; --accent-ink:#381706;
+  /* Vermelho de apagar puxado para o rosado, para não se confundir com o laranja */
+  --ok:#45D19A; --ok-ink:#06261A; --danger:#FE4F75;
   /* Cor secundária: amarelo (descanso, em andamento, prioridade, seleções) */
   --second:#FFD23F; --second-ink:#2B2300; --second-soft:rgba(255,210,63,.14);
-  /* Calendário: rampa de um tom só (amarelo), validada contra o painel #1A2233 */
-  --heat-0:#242E44; --heat-1:#7A6324; --heat-2:#A8862A; --heat-3:#D9AE2A; --heat-4:var(--second);
+  /* Calendário: rampa de um tom só (amarelo), validada contra o painel #24221F */
+  --heat-0:var(--raised); --heat-1:#7A6324; --heat-2:#A8862A; --heat-3:#D9AE2A; --heat-4:var(--second);
   /* Superfície clara invertida (avisos e dica do calendário) */
-  --inv-bg:#EEF1F7; --inv-ink:#121826; --inv-muted:#4B5568;
+  --inv-bg:var(--text); --inv-ink:var(--bg); --inv-muted:#59544E; --inv-accent:#9E4500; --inv-hover:#EBE3DB;
   --r-lg:20px; --r-md:14px; --r-sm:10px;
   --nav-h:64px;
   --num:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
@@ -43,7 +47,7 @@ ul,ol{list-style:none}
 .small{font-size:13px}
 
 /* Barra do topo e navegação (vira menu inferior no celular) */
-.topbar{position:sticky;top:0;z-index:20;background:rgba(18,24,38,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
 .bar{max-width:760px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px;letter-spacing:-.01em}
 .brand-mark{width:30px;height:30px;border-radius:9px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
@@ -178,7 +182,7 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
 
 /* Janela do exercício */
 .sheet-wrap{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:32px}
-.sheet-backdrop{position:absolute;inset:0;background:rgba(6,9,16,.72);animation:fade .25s}
+.sheet-backdrop{position:absolute;inset:0;background:var(--scrim);animation:fade .25s}
 .sheet{position:relative;width:min(900px,100%);max-height:100%;display:flex;flex-direction:column;background:var(--surface);border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);animation:sheetUp .32s cubic-bezier(.2,.8,.2,1)}
 .sheet-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
 .sheet-title{min-width:0}
@@ -222,10 +226,10 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
 #toast-root{position:fixed;left:0;right:0;bottom:24px;z-index:80;display:flex;justify-content:center;padding:0 16px;pointer-events:none}
 .toast{pointer-events:auto;display:flex;align-items:center;gap:14px;max-width:480px;background:var(--inv-bg);color:var(--inv-ink);font-weight:600;padding:12px 18px;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.4);animation:toastIn .25s cubic-bezier(.2,.8,.2,1)}
 .toast.has-action{padding:8px 8px 8px 18px}
-.toast-btn{color:#3446D6;font-weight:800;padding:8px 12px;border-radius:10px}
-.toast-btn:hover{background:#DDE2EE}
+.toast-btn{color:var(--inv-accent);font-weight:800;padding:8px 12px;border-radius:10px}
+.toast-btn:hover{background:var(--inv-hover)}
 .dlg-wrap{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px}
-.dlg-backdrop{position:absolute;inset:0;background:rgba(6,9,16,.72);animation:fade .2s}
+.dlg-backdrop{position:absolute;inset:0;background:var(--scrim);animation:fade .2s}
 .dlg{position:relative;width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px;animation:sheetUp .25s cubic-bezier(.2,.8,.2,1)}
 .dlg p{color:var(--muted)}
 .dlg-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
@@ -244,7 +248,7 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
   .bar{padding:0}
   .brand{display:none}
   .instalar{margin:14px 16px 0 auto}
-  .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;border-radius:0;justify-content:space-around;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(26,34,51,.97);border-top:1px solid var(--line)}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;border-radius:0;justify-content:space-around;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--surface-glass);border-top:1px solid var(--line)}
   .nav button{flex-direction:column;gap:2px;height:auto;padding:6px 14px;font-size:12px;border-radius:12px;min-width:76px}
   .nav button[aria-current="page"]{background:none;color:var(--accent)}
   main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}

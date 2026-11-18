@@ -1,7 +1,7 @@
 // Planner de treino: guarda o app no aparelho para abrir rápido e funcionar sem internet.
 // A página vem sempre da internet quando possível, então atualizar o index.html no GitHub basta.
-// Só troque a versão abaixo se mudar a forma de guardar (ela apaga as cópias antigas).
-const CACHE = 'planner-treino-v1';
+// Troque a versão abaixo ao mudar os ícones, o manifest.json ou a forma de guardar: ela apaga as cópias antigas.
+const CACHE = 'planner-treino-v2';
 const PAGINA = './index.html';
 
 // Guarda uma cópia da resposta (só respostas boas) e devolve a original
