@@ -231,6 +231,24 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding:0 26
 .backup{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .backup>div:first-child{flex:1 1 260px;display:flex;flex-direction:column;gap:4px}
 .backup-actions{display:flex;gap:8px;flex-wrap:wrap}
+a.btn{color:inherit;text-decoration:none}
+
+/* Backup no Google Drive */
+.panel-texto{display:flex;flex-direction:column;gap:4px}
+.conta{overflow-wrap:anywhere}
+.drive-conectar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.drive-conectar .fld{flex:1 1 280px}
+.drive-conectar .btn{height:44px}
+.drive-sit{display:flex;gap:12px;align-items:flex-start;background:var(--raised);border-radius:var(--r-md);padding:12px 14px}
+.drive-sit>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.drive-sit p{overflow-wrap:anywhere}
+.drive-ponto{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--ok)}
+.drive-sit[data-st="enviando"] .drive-ponto,.drive-sit[data-st="pendente"] .drive-ponto{background:var(--accent)}
+.drive-sit[data-st="offline"] .drive-ponto{background:var(--muted)}
+.drive-sit[data-st="erro"] .drive-ponto,.drive-sit[data-st="conflito"] .drive-ponto{background:var(--danger)}
+/* Ponto na aba Ajustes quando o backup precisa de atenção (falhou ou há backup de outro aparelho) */
+.nav button[data-alerta]{position:relative}
+.nav button[data-alerta]::after{content:'';position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
 
 /* Janela do exercício */
 .sheet-wrap{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:32px}
@@ -303,6 +321,8 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding:0 26
 .dlg{position:relative;width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px;animation:sheetUp .25s cubic-bezier(.2,.8,.2,1)}
 .dlg p{color:var(--muted)}
 .dlg-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+.dlg-actions.empilhar{flex-direction:column;align-items:stretch}
+.dlg-texto{display:flex;flex-direction:column;gap:8px}
 
 /* Animações de entrada */
 @keyframes enter{from{opacity:0;transform:translateY(10px)}}
@@ -322,6 +342,7 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding:0 26
   .nav button{flex:1;min-width:0;flex-direction:column;gap:2px;height:auto;padding:6px 2px;font-size:12px;border-radius:12px}
   .titulo-edit{font-size:25px}
   .nav button[aria-current="page"]{background:none;color:var(--accent)}
+  .nav button[data-alerta]::after{top:4px;right:auto;left:calc(50% + 8px)}
   main{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
   .page{padding:20px 16px 24px;gap:16px}
   h1{font-size:25px}
@@ -817,11 +838,13 @@ function salvarAgora() {
   podarBiblioteca(S); // a Biblioteca acompanha os treinos a cada gravação
   try { localStorage.setItem(KEY, JSON.stringify(S)); }
   catch { toast('Não foi possível salvar neste navegador.'); }
+  agendarBackup(); // backup no Google Drive alguns segundos depois da última mudança
 }
 window.addEventListener('pagehide', salvarAgora);
 let diaRenderizado = new Date().toDateString();
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) return salvarAgora();
+  // Ao sair do app, salva e já manda para o Drive o que ainda não foi
+  if (document.hidden) { salvarAgora(); fazerBackup(); return; }
   tick();
   // Se virou o dia com o app aberto, atualiza a tela "Hoje"
   if (new Date().toDateString() !== diaRenderizado && ui.tab === 'hoje' && !ui.exAberto) render();
@@ -1165,15 +1188,16 @@ function viewExercicio(ex) {
 /* ---------- Ajustes ---------- */
 function viewAjustes() {
   return `<section class="page">
-    <header class="page-head"><div><h1>Ajustes</h1><p>Seus dados, exportação e backup.</p></div></header>
+    <header class="page-head"><div><h1>Ajustes</h1><p>Seus dados, backup e exportação.</p></div></header>
     <div class="panel"><h2>Seus dados</h2>${corpoHTML('esteira')}</div>
+    <div class="panel" id="drive">${driveHTML()}</div>
+    <div class="panel backup">
+      <div><h2>Backup em arquivo</h2><p class="small muted">Um arquivo com tudo (treinos, histórico e Biblioteca) para guardar onde quiser ou levar para outro aparelho. Importar troca os dados deste aparelho pelos do arquivo.</p></div>
+      <div class="backup-actions"><button class="btn ghost small" data-act="exportar">Exportar backup</button><button class="btn ghost small" data-act="importar">Importar backup</button></div>
+    </div>
     <div class="panel backup">
       <div><h2>Exportar dados de treino</h2><p class="small muted">Uma planilha (CSV) com cada série e cada trecho de cardio: data, exercício, carga, repetições, RIR, distância, tempo e mais. Abre no Excel e no Google Planilhas, e pode ser enviada para uma IA analisar sua evolução. Para um exercício só, use Exportar dados na página dele, na Biblioteca.</p></div>
       <div class="backup-actions"><button class="btn ghost small" data-act="exportar-csv">${icon('baixar', 18)} Exportar planilha</button></div>
-    </div>
-    <div class="panel backup">
-      <div><h2>Backup</h2><p class="small muted">Seus dados ficam salvos só neste navegador. Exporte um arquivo de vez em quando para não perder nada. O backup leva tudo: treinos, histórico e Biblioteca.</p></div>
-      <div class="backup-actions"><button class="btn ghost small" data-act="exportar">Exportar backup</button><button class="btn ghost small" data-act="importar">Importar backup</button></div>
     </div>
   </section>`;
 }
@@ -1838,6 +1862,7 @@ async function concluirTreino() {
   salvarAgora();
   render(true);
   toast('Treino concluído e salvo no histórico');
+  fazerBackup({ avisarErro: true }); // vai para o Drive na hora (se estiver conectado)
 }
 
 async function cancelarTreino() {
@@ -1897,10 +1922,21 @@ function baixarArquivo(nome, conteudo, tipo) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// O mesmo formato vale para o arquivo exportado e para o backup no Google Drive
+const pacoteBackup = dados => ({ app: 'planner-treino', exportadoEm: new Date().toISOString(), dados });
 function exportar() {
-  baixarArquivo(`planner-treino-backup-${dataISO(Date.now())}.json`,
-    JSON.stringify({ app: 'planner-treino', exportadoEm: new Date().toISOString(), dados: S }, null, 2), 'application/json');
+  baixarArquivo(`planner-treino-backup-${dataISO(Date.now())}.json`, JSON.stringify(pacoteBackup(S), null, 2), 'application/json');
   toast('Backup exportado');
+}
+
+// Texto dos diálogos de importar e de restaurar ("de" diz de onde vêm os dados)
+const trocaDados = (de, d) => `Os treinos e o histórico deste aparelho serão trocados pelos ${de}: ${plural(d.treinos.length, 'treino', 'treinos')} e ${plural(d.historico.length, 'registro', 'registros')}.`;
+
+// Troca os dados deste aparelho pelos de um backup (arquivo ou Drive), com "Desfazer"
+function aplicarBackup(d, msg) {
+  if (ui.exAberto) fecharEx();
+  zerar();
+  comDesfazer(msg, () => { S = d; });
 }
 
 /* ---------- Planilha CSV (para planilhas e para análise com IA) ---------- */
@@ -1908,9 +1944,10 @@ function exportar() {
 const COLUNAS_CSV = ['data', 'hora', 'treino', 'exercicio', 'tipo', 'serie_ou_trecho', 'peso_kg', 'repeticoes', 'rir', 'dava_muito_mais',
   'distancia_km', 'tempo_min', 'inclinacao_pct', 'degraus', 'esforco', 'velocidade_kmh', 'ritmo_min_por_km', 'degraus_por_min',
   'kcal_estimadas', 'peso_corporal_kg'];
+const arred2 = v => Math.round(v * 100) / 100; // duas casas, no CSV e na planilha do Drive
 const celulaCSV = v => {
   if (v == null || v === '') return '';
-  if (typeof v === 'number') return String(Math.round(v * 100) / 100);
+  if (typeof v === 'number') return String(arred2(v));
   const s = /^[=+\-@\t\r]/.test(v) ? `'${v}` : String(v); // a planilha não lê o texto como fórmula
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
@@ -1920,7 +1957,8 @@ function linhasCSV(exId) {
   const registros = exId ? S.historico.filter(h => h.exercicios.some(e => e.exId === exId)) : [...S.historico];
   for (const h of registros.sort((a, b) => a.inicio - b.inicio)) for (const e of h.exercicios) {
     if (exId && e.exId !== exId) continue;
-    const base = { data: dataISO(h.inicio), hora: fmtHora(h.inicio), treino: h.nome, exercicio: nomeItem(porId.get(e.exId) || e), tipo: ehCardio(e) ? 'cardio' : 'musculacao' };
+    // exId não vai para o CSV: serve para separar as abas da planilha do Drive
+    const base = { exId: e.exId, data: dataISO(h.inicio), hora: fmtHora(h.inicio), treino: h.nome, exercicio: nomeItem(porId.get(e.exId) || e), tipo: ehCardio(e) ? 'cardio' : 'musculacao' };
     if (!ehCardio(e)) {
       e.series.forEach((s, i) => linhas.push({ ...base, serie_ou_trecho: i + 1, peso_kg: s.peso, repeticoes: s.reps, rir: s.rir, dava_muito_mais: s.mais ? 'sim' : '' }));
       continue;
@@ -1947,6 +1985,362 @@ function exportarCSV(exId) {
   const nome = exId ? chaveNome(nomeItem(exPorId(exId))).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'dados';
   baixarArquivo(`treino-${nome || 'exercicio'}-${dataISO(Date.now())}.csv`, csv, 'text/csv;charset=utf-8');
   toast('Planilha exportada');
+}
+
+/* ---------- Backup no Google Drive ----------
+   O script planner-treino-apps-script.gs, publicado na conta Google da pessoa, guarda no Drive dela o backup
+   (o mesmo formato de "Exportar backup"), uma cópia por dia e uma planilha com uma aba por exercício.
+   O backup vai sozinho: na hora em que um treino é concluído e alguns segundos depois de qualquer outra mudança.
+   "versao" é a data do último backup que este aparelho fez ou restaurou: se o Drive recebeu depois disso um backup
+   de outro aparelho, a pessoa escolhe qual fica (o que sai é guardado na pasta Cópias do Drive). */
+const DRIVE_KEY = 'planner-treino-drive';
+// Fica só neste aparelho: endereço do script, chave, conta, versão e resumo (hash) do último backup e das abas
+let DR = (() => { try { const o = JSON.parse(localStorage.getItem(DRIVE_KEY)); return o && typeof o === 'object' ? o : {}; } catch { return {}; } })();
+const salvarDR = () => { try { localStorage.setItem(DRIVE_KEY, JSON.stringify(DR)); } catch { /* sem espaço: grava na próxima vez */ } };
+const driveLigado = () => !!(DR.url && DR.chave);
+// Só enquanto o app está aberto. pendente: há mudança esperando o backup; denovo: { substituir } de um backup pedido
+// enquanto outro era enviado; planilha/planilhaDeNovo: o mesmo para a planilha; url: o que foi digitado no campo
+const dr = { estado: 'ok', msg: '', pendente: false, ocupado: false, denovo: null, planilha: false, planilhaDeNovo: false, t: 0, conectando: false, url: null };
+
+// Resumo curto (cyrb53) do conteúdo: diz se há mudança que o Drive ainda não tem
+function hashTxt(str) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+const chaveNova = () => b64url(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24))));
+const b64url = s => btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const nomeAparelho = () => /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 'Celular' : 'Computador';
+const urlScriptOk = u => /^https:\/\/script\.google(usercontent)?\.com\/\S+$/.test(u) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/\S*$/.test(u);
+const linkGoogleOk = u => /^https:\/\/(docs|drive)\.google\.com\/\S+$/.test(u || '');
+// Vai para o Drive tudo, menos um treino em andamento (ele entra quando for concluído)
+const dadosDrive = () => ({ ...S, sessao: null });
+const hashDados = () => hashTxt(JSON.stringify(dadosDrive()));
+// "hoje às 14:32", "ontem às 09:10", "em 18 Nov às 20:01"
+function quandoTxt(ts) {
+  if (!Number.isFinite(ts)) return '';
+  const dias = Math.round((inicioDoDia(Date.now()) - inicioDoDia(ts)) / DIA_MS);
+  return `${dias === 0 ? 'hoje' : dias === 1 ? 'ontem' : `em ${fmtDiaMes(ts)}`} às ${fmtHora(ts)}`;
+}
+const backupDe = (atualizado, aparelho) => [quandoTxt(Date.parse(atualizado)), aparelho && `no ${aparelho}`].filter(Boolean).join(' ');
+
+async function nuvem(acao, extra, alvo, espera = 40000) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), espera);
+  const semResposta = () => Object.assign(new Error(navigator.onLine === false
+    ? 'Sem internet. O backup vai quando a conexão voltar.' : 'O script do Google não respondeu. Tente de novo em instantes.'), { rede: true });
+  try {
+    let r, j;
+    try { r = await fetch(alvo.url, { method: 'POST', body: JSON.stringify({ acao, chave: alvo.chave, ...extra }), signal: ctl.signal }); }
+    catch { throw semResposta(); }
+    try { j = await r.json(); }
+    catch { throw ctl.signal.aborted ? semResposta() : new Error('O script não respondeu como esperado. Confira se ele foi implantado como "App da Web", com acesso para "Qualquer pessoa".'); }
+    if (j?.erro) {
+      // Na autorização, ficou desmarcada a caixinha do Drive ou das Planilhas
+      if (/DriveApp|SpreadsheetApp|auth\/(drive|spreadsheets)|permiss/i.test(j.erro)) throw new Error('O script ainda não tem permissão para usar seu Drive. Em script.google.com, abra o script, escolha a função "autorizar" ao lado de "Depuração", clique em Executar e marque todas as permissões.');
+      throw new Error(j.erro);
+    }
+    return j;
+  } finally { clearTimeout(t); }
+}
+function guardarInfo(r) {
+  if (r.conta) DR.conta = String(r.conta);
+  if (linkGoogleOk(r.pasta)) DR.pasta = r.pasta;
+  if (linkGoogleOk(r.planilha)) DR.planilha = r.planilha;
+  DR.planilhaDe = String(r.planilhaDe ?? ''); // se foi outro aparelho, as abas guardadas aqui não valem mais
+}
+// O Drive ficou com o backup "versao", cujo conteúdo tem o resumo "hash"
+function emDia(versao, hash) {
+  Object.assign(DR, { versao, hash, conflito: null });
+  salvarDR();
+  dr.pendente = hash !== hashDados(); // algo mudou enquanto enviava
+  estadoDrive('ok');
+}
+
+function agendarBackup(ms = 20000) {
+  if (!driveLigado() || DR.conflito) return;
+  clearTimeout(dr.t);
+  dr.t = setTimeout(fazerBackup, ms);
+  if (!dr.pendente) { dr.pendente = true; renderDrive(); } // em Ajustes, mostra "Mudanças a enviar"
+}
+
+// manual: "Fazer backup agora" (envia mesmo sem mudança e avisa o resultado). substituir: a pessoa escolheu trocar
+// o backup de outro aparelho pelo deste. avisarErro: logo depois de concluir um treino.
+async function fazerBackup({ manual = false, substituir = false, avisarErro = manual } = {}) {
+  if (!driveLigado() || (DR.conflito && !substituir)) return;
+  if (dr.ocupado) {
+    // Vai de novo quando o envio atual terminar (guardando a escolha de substituir)
+    dr.denovo = { substituir: substituir || !!dr.denovo?.substituir };
+    if (manual) toast('O backup já está sendo feito.');
+    return;
+  }
+  clearTimeout(dr.t);
+  const dados = dadosDrive(), h = hashTxt(JSON.stringify(dados)), alvo = DR;
+  if (h === DR.hash && !manual && !substituir) {
+    if (dr.pendente) { dr.pendente = false; renderDrive(); } // as mudanças não chegaram aos dados do backup
+    return;
+  }
+  dr.ocupado = true;
+  estadoDrive('enviando');
+  let enviado = false;
+  try {
+    const r = await nuvem('enviar', { backup: pacoteBackup(dados), versao: DR.versao || '', aparelhoId: DR.aparelhoId, aparelho: nomeAparelho(), substituir }, alvo, 60000);
+    if (DR !== alvo) return estadoDrive('ok'); // desconectou enquanto enviava
+    guardarInfo(r);
+    if (r.conflito) {
+      DR.conflito = { aparelho: String(r.aparelho || ''), atualizado: String(r.atualizado || '') };
+      salvarDR();
+      estadoDrive('conflito');
+      toast('O Drive tem um backup mais novo, de outro aparelho. Em Ajustes, escolha qual fica.');
+      return;
+    }
+    emDia(r.atualizado, h);
+    if (manual) toast('Backup feito no Google Drive');
+    enviado = true;
+  } catch (e) {
+    if (DR !== alvo) return;
+    estadoDrive(e.rede ? 'offline' : 'erro', e.message);
+    if (avisarErro) toast(e.message);
+  } finally {
+    dr.ocupado = false;
+    if (dr.denovo) {
+      const { substituir } = dr.denovo;
+      dr.denovo = null;
+      clearTimeout(dr.t);
+      dr.t = setTimeout(() => fazerBackup({ substituir }), 1000);
+    }
+  }
+  // A planilha vai depois, sem segurar o próximo backup (na primeira vez ela leva alguns minutos)
+  if (enviado) atualizarPlanilha();
+}
+
+/* Planilha do Drive: a aba Exercícios (todos, com a situação de cada um) e uma aba por exercício com registros,
+   uma linha por série ou trecho. Só vão as abas que mudaram desde a última vez (o resumo de cada uma fica em DR.abas). */
+const ABA_INDICE = 'Exercícios';
+const TITULOS_PLANILHA = {
+  data: 'Data', hora: 'Hora', treino: 'Treino', serie_ou_trecho: 'Série', peso_kg: 'Peso (kg)', repeticoes: 'Repetições', rir: 'RIR',
+  dava_muito_mais: 'Dava muito mais', distancia_km: 'Distância (km)', tempo_min: 'Tempo (min)', inclinacao_pct: 'Inclinação (%)',
+  degraus: 'Degraus', esforco: 'Esforço', velocidade_kmh: 'Velocidade (km/h)', ritmo_min_por_km: 'Ritmo (min/km)',
+  degraus_por_min: 'Degraus por min', kcal_estimadas: 'Kcal estimadas', peso_corporal_kg: 'Peso corporal (kg)',
+};
+const SITUACAO_PLANILHA = { uso: 'Em uso', fora: 'Fora do plano', arquivados: 'Arquivado' };
+function abasPlanilha() {
+  const situacao = situacoes(), porEx = new Map(), usados = new Set([ABA_INDICE.toLowerCase()]);
+  for (const l of linhasCSV()) {
+    const lista = porEx.get(l.exId);
+    if (lista) lista.push(l); else porEx.set(l.exId, [l]);
+  }
+  // Nome de aba válido (sem os caracteres que o Excel recusa) e sem repetir
+  const nomeAba = ex => {
+    const base = nomeItem(ex).replace(/[[\]:*?/\\]/g, ' ').replace(/^'+|'+$/g, '').replace(/\s+/g, ' ').trim().slice(0, 90) || 'Exercício';
+    let nome = base;
+    for (let n = 2; usados.has(nome.toLowerCase()); n++) nome = `${base.slice(0, 85)} (${n})`;
+    usados.add(nome.toLowerCase());
+    return nome;
+  };
+  const porNome = (a, b) => nomeItem(a).localeCompare(nomeItem(b), 'pt-BR');
+  const exs = [...S.biblioteca.filter(ex => !ehCardio(ex)).sort(porNome), ...S.biblioteca.filter(ehCardio).sort(porNome)];
+  const indice = { nome: ABA_INDICE, colunas: ['Exercício', 'Tipo', 'Situação', 'Treinos', 'Dias de treino', 'Último registro'], linhas: [] };
+  const abas = [indice];
+  for (const ex of exs) {
+    const s = situacao(ex), linhas = porEx.get(ex.id) || [];
+    indice.linhas.push([nomeItem(ex), ehCardio(ex) ? 'Cardio' : 'Musculação', SITUACAO_PLANILHA[s.situacao], s.treinos.join(', '), s.dias, s.ultimo ? dataISO(s.ultimo) : '']);
+    if (!linhas.length) continue;
+    // Data, hora, treino e série sempre; as outras colunas só se o exercício tem algum valor nelas
+    const cols = COLUNAS_CSV.filter(k => ['data', 'hora', 'treino', 'serie_ou_trecho'].includes(k) || (k !== 'exercicio' && k !== 'tipo' && linhas.some(l => !vazio(l[k]))));
+    abas.push({
+      nome: nomeAba(ex),
+      colunas: cols.map(k => k === 'serie_ou_trecho' && ehCardio(ex) ? 'Trecho' : TITULOS_PLANILHA[k]),
+      linhas: linhas.map(l => cols.map(k => typeof l[k] === 'number' ? arred2(l[k]) : l[k] ?? '')),
+    });
+  }
+  return abas.map(a => ({ ...a, hash: hashTxt(JSON.stringify(a)) }));
+}
+
+// Uma atualização por vez. Pedida durante outra (ou se faltaram abas na planilha), roda de novo no fim, até 3 vezes
+async function atualizarPlanilha() {
+  if (dr.planilha) { dr.planilhaDeNovo = true; return; }
+  dr.planilha = true;
+  try {
+    for (let vez = 0; vez < 3; vez++) {
+      dr.planilhaDeNovo = false;
+      await enviarPlanilha();
+      if (!dr.planilhaDeNovo) break;
+    }
+  } finally { dr.planilha = false; }
+  renderDrive();
+}
+async function enviarPlanilha() {
+  // As abas guardadas aqui só valem se foi este aparelho que escreveu a planilha por último
+  const alvo = DR, abas = abasPlanilha(), nomes = abas.map(a => a.nome);
+  const antes = DR.planilhaDe === DR.aparelhoId && DR.abas || {};
+  const mudaram = abas.filter(a => antes[a.nome] !== a.hash);
+  if (!mudaram.length && Object.keys(antes).every(n => nomes.includes(n))) return;
+  try {
+    // A primeira vez cria uma aba por exercício e pode levar alguns minutos
+    const r = await nuvem('planilha', { aparelhoId: DR.aparelhoId, planilha: { nomes, abas: mudaram.map(({ hash, ...a }) => a) } }, alvo, 300000);
+    if (DR !== alvo) return;
+    guardarInfo(r);
+    const faltando = new Set(Array.isArray(r.faltando) ? r.faltando : []);
+    DR.abas = Object.fromEntries(abas.filter(a => !faltando.has(a.nome)).map(a => [a.nome, a.hash]));
+    DR.planilhaErro = '';
+    if (faltando.size) dr.planilhaDeNovo = true; // alguém apagou abas na planilha: manda de novo
+  } catch (e) {
+    if (DR !== alvo) return;
+    DR.planilhaErro = e.message;
+  }
+  salvarDR();
+}
+
+// Liga este aparelho ao script: o primeiro registra uma chave nova; os outros chegam pelo link (endereço + chave)
+async function conectarDrive(url, chave = '') {
+  if (dr.conectando) return; // Enter duas vezes no campo não conecta duas vezes
+  url = String(url || '').trim();
+  if (!urlScriptOk(url)) return toast('Cole o endereço do script: começa com https://script.google.com/ e termina em /exec.');
+  const anterior = DR.anterior?.url === url ? DR.anterior : {}; // reconectar ao mesmo script usa a mesma chave
+  const alvo = { url, chave: chave || anterior.chave || chaveNova() };
+  dr.conectando = true;
+  renderDrive();
+  let info;
+  try { info = await nuvem('registrar', {}, alvo); }
+  catch (e) { return toast(e.message); }
+  finally { dr.conectando = false; renderDrive(); }
+  const conta = info.conta || 'sua conta Google';
+  let escolha = 'enviar';
+  if (info.atualizado) {
+    escolha = await dialogo({
+      titulo: 'Já existe um backup no Drive',
+      texto: [`O Google Drive de ${conta} tem um backup feito ${backupDe(info.atualizado, info.aparelho)}.`,
+        'Restaurar troca os dados deste aparelho pelos do Drive. Substituir põe os dados deste aparelho no lugar, e o backup que estava lá fica guardado na pasta Cópias.'],
+      botoes: [['restaurar', 'Restaurar o backup do Drive', 'primary'], ['substituir', 'Substituir pelo deste aparelho', 'ghost'], [null, 'Cancelar', 'ghost']],
+      foco: 0,
+    });
+  } else if (chave) {
+    // Veio por um link: mostra a conta antes de mandar os dados para ela
+    const ok = await confirmar({ titulo: 'Conectar ao Google Drive?', texto: `Os backups deste aparelho vão para o Google Drive de ${conta}.`, ok: 'Conectar' });
+    escolha = ok ? 'enviar' : null;
+  }
+  if (!escolha) return toast('Conexão cancelada.');
+  DR = { url, chave: alvo.chave, aparelhoId: anterior.aparelhoId || DR.aparelhoId || uid(), abas: {} };
+  guardarInfo(info);
+  salvarDR();
+  estadoDrive('ok');
+  if (escolha === 'restaurar') return restaurarDrive({ perguntar: false });
+  await fazerBackup({ manual: true, substituir: escolha === 'substituir' });
+}
+
+async function restaurarDrive({ perguntar = true } = {}) {
+  const alvo = DR;
+  toast('Buscando o backup no Drive…');
+  let r;
+  try { r = await nuvem('baixar', {}, alvo, 60000); }
+  catch (e) { return toast(e.message); }
+  if (DR !== alvo) return;
+  guardarInfo(r);
+  const d = r.backup && normalizar(r.backup.dados);
+  if (!d) return toast('O Drive ainda não tem um backup para restaurar.');
+  if (perguntar) {
+    const ok = await confirmar({
+      titulo: 'Restaurar o backup do Drive?',
+      texto: `${trocaDados(`do backup feito ${backupDe(r.atualizado, r.aparelho)}`, d)}${S.sessao ? ' O treino em andamento será descartado.' : ''}`,
+      ok: 'Restaurar backup',
+    });
+    if (!ok || DR !== alvo) return;
+  }
+  aplicarBackup(d, 'Backup do Drive restaurado');
+  emDia(r.atualizado, hashDados());
+}
+
+async function substituirDrive() {
+  const c = DR.conflito || {};
+  const ok = await confirmar({
+    titulo: 'Substituir o backup do Drive?',
+    texto: `Os dados deste aparelho passam a ser o backup. O backup feito ${backupDe(c.atualizado, c.aparelho)} fica guardado na pasta Cópias do Drive.`,
+    ok: 'Substituir backup',
+  });
+  if (ok) fazerBackup({ manual: true, substituir: true });
+}
+
+function desconectarDrive() {
+  const antes = DR;
+  DR = { anterior: { url: antes.url, chave: antes.chave, aparelhoId: antes.aparelhoId } };
+  salvarDR();
+  clearTimeout(dr.t);
+  estadoDrive('ok');
+  toast('Backup no Drive desligado. O que já está lá continua guardado.', () => { DR = antes; salvarDR(); renderDrive(); agendarBackup(1000); });
+}
+
+// Link para conectar outro aparelho: leva o endereço e a chave (quem tiver o link acessa o backup)
+async function copiarLinkDrive() {
+  const link = `${location.origin}${location.pathname.replace(/index\.html$/, '')}#conectar=${b64url(JSON.stringify({ u: DR.url, k: DR.chave }))}`;
+  try { await navigator.clipboard.writeText(link); }
+  catch {
+    const campo = document.createElement('textarea');
+    campo.value = link;
+    campo.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(campo);
+    campo.select();
+    const ok = document.execCommand('copy');
+    campo.remove();
+    if (!ok) return toast('Não foi possível copiar o link neste navegador.');
+  }
+  toast('Link copiado. Abra no outro aparelho. Quem tiver este link acessa seu backup: mande só para você mesmo.');
+}
+function lerLinkConexao() {
+  const m = location.hash.match(/^#conectar=([\w-]+)$/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search); // o link (com a chave) sai da barra de endereço
+  let o = null;
+  try { o = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch { /* link quebrado */ }
+  if (typeof o?.u !== 'string' || typeof o?.k !== 'string' || !/^[\w-]{24,}$/.test(o.k)) return toast('Este link de conexão não é válido.');
+  if (DR.url === o.u && DR.chave === o.k) return toast('Este aparelho já está conectado ao Google Drive.');
+  ui.tab = 'ajustes';
+  ui.libAberto = null;
+  render(true);
+  conectarDrive(o.u, o.k);
+}
+
+/* Painel em Ajustes (o conteúdo de #drive). O estado muda sem redesenhar a página inteira (não atrapalha quem está digitando) */
+const ROTULO_DRIVE = { ok: 'Backup em dia', pendente: 'Mudanças a enviar', enviando: 'Fazendo backup…', offline: 'Sem internet', erro: 'O backup falhou', conflito: 'Backup de outro aparelho no Drive' };
+function driveHTML() {
+  if (!driveLigado()) return `
+      <div class="panel-texto"><h2>Backup no Google Drive</h2><p class="small muted">Uma cópia de tudo no seu Google Drive, sem precisar lembrar: o backup vai sozinho quando você conclui um treino e quando algo muda. Para começar, publique uma vez o script de backup na sua conta Google e cole aqui o endereço dele.</p></div>
+      <div class="drive-conectar">
+        <label class="fld"><span>Endereço do script (termina em /exec)</span><input class="field" id="drive-url" type="url" value="${esc(dr.url ?? DR.anterior?.url ?? '')}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <button class="btn primary" data-act="drive-conectar"${dr.conectando ? ' disabled' : ''}>${dr.conectando ? 'Conectando…' : 'Conectar'}</button>
+      </div>`;
+  const c = DR.conflito;
+  const estado = c ? 'conflito' : dr.estado === 'ok' && dr.pendente ? 'pendente' : dr.estado;
+  const detalhe = {
+    ok: DR.versao ? `Último backup ${quandoTxt(Date.parse(DR.versao))}.` : 'Nenhum backup ainda.',
+    pendente: 'As últimas mudanças vão para o Drive em instantes.',
+    enviando: 'Enviando seus dados para o Drive.',
+    offline: dr.msg,
+    erro: dr.msg,
+    conflito: c && `O Drive recebeu um backup feito ${backupDe(c.atualizado, c.aparelho)}, depois do último deste aparelho. Escolha qual fica: o que sair é guardado na pasta Cópias do Drive.`,
+  }[estado];
+  const acoes = c
+    ? '<button class="btn primary small" data-act="drive-restaurar">Restaurar o do Drive</button><button class="btn ghost small" data-act="drive-substituir">Substituir pelo deste aparelho</button>'
+    : '<button class="btn primary small" data-act="drive-backup">Fazer backup agora</button><button class="btn ghost small" data-act="drive-restaurar">Restaurar do Drive</button>';
+  const links = [[DR.planilha, 'Abrir planilha'], [DR.pasta, 'Abrir pasta']].filter(([u]) => linkGoogleOk(u))
+    .map(([u, rotulo]) => `<a class="btn ghost small" href="${esc(u)}" target="_blank" rel="noopener">${rotulo}</a>`).join('');
+  return `
+      <div class="panel-texto"><h2>Backup no Google Drive</h2><p class="small muted conta">${esc(DR.conta || 'Conectado')}</p></div>
+      <div class="drive-sit" data-st="${estado}"><span class="drive-ponto" aria-hidden="true"></span><div><b>${ROTULO_DRIVE[estado]}</b>${detalhe ? `<p class="small muted">${esc(detalhe)}</p>` : ''}${DR.planilhaErro && !c ? `<p class="small muted">A planilha não foi atualizada: ${esc(DR.planilhaErro)}</p>` : ''}</div></div>
+      <div class="backup-actions">${acoes}${links}</div>
+      <p class="hint">No Drive, a pasta Planner de treino guarda o backup completo, a planilha com uma aba por exercício e, na pasta Cópias, como tudo estava no início de cada dia. Para voltar a uma cópia antiga, baixe o arquivo dela e use Importar backup, aqui embaixo.</p>
+      <div class="backup-actions"><button class="btn ghost small" data-act="drive-link">Conectar outro aparelho</button><button class="btn text-danger small" data-act="drive-sair">Desconectar</button></div>`;
+}
+function estadoDrive(estado, msg = '') {
+  dr.estado = estado;
+  dr.msg = msg;
+  renderDrive();
+}
+function renderDrive() {
+  $('[data-tab="ajustes"]')?.toggleAttribute('data-alerta', !!DR.conflito || dr.estado === 'erro');
+  const el = $('#drive');
+  if (el) trocarHTML(el, driveHTML());
 }
 
 /* ---------- Ações da Biblioteca ---------- */
@@ -2028,13 +2422,10 @@ $('#import-file').addEventListener('change', async ev => {
   if (!d) { toast('Este arquivo não é um backup do Planner de treino.'); return; }
   const ok = await confirmar({
     titulo: 'Importar backup?',
-    texto: `Os treinos e o histórico deste aparelho serão trocados pelos do arquivo (${plural(d.treinos.length, 'treino', 'treinos')}, ${plural(d.historico.length, 'registro', 'registros')}).`,
+    texto: trocaDados('do arquivo', d),
     ok: 'Importar backup',
   });
-  if (!ok) return;
-  if (ui.exAberto) fecharEx();
-  zerar();
-  comDesfazer('Backup importado', () => { S = d; });
+  if (ok) aplicarBackup(d, 'Backup importado');
 });
 
 /* ---------- Avisos, desfazer e diálogos ---------- */
@@ -2043,7 +2434,8 @@ function toast(msg, desfazer) {
   ui.desfazer = desfazer || null;
   root.innerHTML = `<div class="toast${desfazer ? ' has-action' : ''}" role="status"><span>${esc(msg)}</span>${desfazer ? '<button class="toast-btn" data-act="desfazer">Desfazer</button>' : ''}</div>`;
   clearTimeout(ui.toastT);
-  ui.toastT = setTimeout(() => { root.innerHTML = ''; ui.desfazer = null; }, desfazer ? 6000 : 3200);
+  // Avisos longos (erros do backup, por exemplo) ficam mais tempo, para dar tempo de ler
+  ui.toastT = setTimeout(() => { root.innerHTML = ''; ui.desfazer = null; }, desfazer ? 6000 : Math.max(3200, msg.length * 60));
 }
 
 // Faz a mudança, grava e redesenha; o aviso traz "Desfazer". aoFazer redesenha logo depois da mudança
@@ -2056,22 +2448,26 @@ function comDesfazer(msg, mudar, redesenhar = render, aoFazer = redesenhar) {
   toast(msg, () => { S = antes; salvarAgora(); redesenhar(); });
 }
 
-function confirmar({ titulo, texto, ok, nao = 'Voltar', perigo = false }) {
+// Diálogo próprio. botoes = [[valor, rótulo, classe], ...] na ordem da tela (com 3 ou mais, um embaixo do outro);
+// texto pode ser uma lista de parágrafos. Fechar (Esc, ou tocar fora) devolve null.
+function dialogo({ titulo, texto, botoes, foco = botoes.length - 1 }) {
   ui.fecharDialogo?.(); // nunca empilha dois diálogos
   return new Promise(resolve => {
     const root = $('#dialog-root');
-    const foco = document.activeElement;
-    root.innerHTML = `<div class="dlg-wrap"><div class="dlg-backdrop" data-r="0"></div>
+    const antes = document.activeElement;
+    root.innerHTML = `<div class="dlg-wrap"><div class="dlg-backdrop" data-r=""></div>
       <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d">
-        <h2 id="dlg-t">${esc(titulo)}</h2><p id="dlg-d">${esc(texto)}</p>
-        <div class="dlg-actions"><button class="btn ghost" data-r="0">${esc(nao)}</button><button class="btn ${perigo ? 'danger' : 'primary'}" data-r="1">${esc(ok)}</button></div>
+        <h2 id="dlg-t">${esc(titulo)}</h2><div class="dlg-texto" id="dlg-d">${[].concat(texto).map(p => `<p>${esc(p)}</p>`).join('')}</div>
+        <div class="dlg-actions${botoes.length > 2 ? ' empilhar' : ''}">${botoes.map(([, rotulo, cls], i) => `<button class="btn ${cls}" data-r="${i}">${esc(rotulo)}</button>`).join('')}</div>
       </div></div>`;
-    const fim = v => { root.innerHTML = ''; root.onclick = null; ui.fecharDialogo = null; foco?.focus?.({ preventScroll: true }); resolve(v); };
-    root.onclick = e => { const b = e.target.closest('[data-r]'); if (b) fim(b.dataset.r === '1'); };
-    ui.fecharDialogo = () => fim(false);
-    root.querySelector(perigo ? '.btn.ghost' : '.btn.primary').focus();
+    const fim = v => { root.innerHTML = ''; root.onclick = null; ui.fecharDialogo = null; antes?.focus?.({ preventScroll: true }); resolve(v); };
+    root.onclick = e => { const b = e.target.closest('[data-r]'); if (b) fim(b.dataset.r ? botoes[+b.dataset.r][0] : null); };
+    ui.fecharDialogo = () => fim(null);
+    root.querySelectorAll('.dlg-actions .btn')[foco].focus();
   });
 }
+const confirmar = ({ titulo, texto, ok, nao = 'Voltar', perigo = false }) =>
+  dialogo({ titulo, texto, botoes: [[false, nao, 'ghost'], [true, ok, perigo ? 'danger' : 'primary']], foco: perigo ? 0 : 1 }).then(v => v === true);
 
 /* ---------- Eventos ---------- */
 document.addEventListener('click', ev => {
@@ -2135,6 +2531,12 @@ document.addEventListener('click', ev => {
     case 'apagar-hist': comDesfazer('Registro apagado', () => { S.historico = S.historico.filter(h => h.id !== id); }); break;
     case 'exportar': exportar(); break;
     case 'importar': $('#import-file').click(); break;
+    case 'drive-conectar': conectarDrive($('#drive-url')?.value); break;
+    case 'drive-backup': fazerBackup({ manual: true }); break;
+    case 'drive-restaurar': restaurarDrive(); break;
+    case 'drive-substituir': substituirDrive(); break;
+    case 'drive-link': copiarLinkDrive(); break;
+    case 'drive-sair': desconectarDrive(); break;
     case 'desfazer': {
       const desfazer = ui.desfazer;
       ui.desfazer = null;
@@ -2171,6 +2573,7 @@ document.addEventListener('input', ev => {
   const el = ev.target;
   // Busca da Biblioteca: refaz só a lista, para o campo não perder o foco
   if (el.id === 'lib-busca') { ui.libBusca = el.value; $('#lib-lista').innerHTML = listaBibliotecaHTML(); return; }
+  if (el.id === 'drive-url') { dr.url = el.value; return; } // o endereço digitado continua no campo se o painel redesenhar
   if (!el.dataset?.f) return;
   if (el.classList.contains('num')) {
     const limpo = el.value.replace(filtroDe(el.dataset.f.slice(2)), '');
@@ -2201,6 +2604,7 @@ document.addEventListener('focusout', ev => {
 });
 
 document.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter' && ev.target.id === 'drive-url') return conectarDrive(ev.target.value);
   // Mantém o Tab dentro do diálogo ou da janela do exercício abertos
   if (ev.key === 'Tab') {
     const modal = $('.dlg') || $('.sheet');
@@ -2246,6 +2650,10 @@ $('#instalar').insertAdjacentHTML('afterbegin', icon('baixar', 18));
 $('#nav').innerHTML = [['hoje', 'Hoje'], ['treinos', 'Treinos'], ['biblioteca', 'Biblioteca'], ['historico', 'Histórico'], ['ajustes', 'Ajustes']]
   .map(([k, nome]) => `<button data-act="tab" data-tab="${k}">${icon(k)}<span>${nome}</span></button>`).join('');
 render(true);
+renderDrive();       // o ponto de aviso na aba Ajustes, se houver backup de outro aparelho
+lerLinkConexao();    // aberto pelo link de "Conectar outro aparelho"
+if (driveLigado() && hashDados() !== DR.hash) agendarBackup(3000); // manda o que ficou sem backup da última vez
+window.addEventListener('online', () => fazerBackup());
 </script>
 </body>
 </html>
