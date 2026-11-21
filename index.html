@@ -162,7 +162,22 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding:0 26
 .field.limpa{text-align:center;font-family:var(--num);font-size:19px;font-weight:600;padding:0 6px}
 .prio[aria-pressed="true"],.prio[aria-pressed="true"]:hover{color:var(--second)}
 .prio[aria-pressed="true"] svg{fill:currentColor}
+/* Musculação no editor: em cima nome, séries, repetições, prioridade e remover; embaixo (ex-mais) as séries A e P,
+   o descanso T, a observação, o F e o bi-set */
+.ex-mais{grid-column:1 / -1;display:grid;grid-template-columns:150px 104px minmax(0,1fr) 40px 40px;grid-template-areas:"plano desc obs falha biset";gap:10px;align-items:end}
+.ex-mais .plano{grid-area:plano}
+.ex-mais .descanso{grid-area:desc}
+.ex-mais .obs{grid-area:obs}
+.ex-mais .falha{grid-area:falha}
+.ex-mais .biset{grid-area:biset}
+/* F e bi-set ligados: fundo amarelo claro, como as etiquetas */
+.marca.falha{font-size:21px;font-weight:600}
+.marca[aria-pressed="true"],.marca[aria-pressed="true"]:hover{background:var(--second-soft);color:var(--second)}
+/* Os dois exercícios de um bi-set ficam ligados por uma faixa amarela à esquerda */
+.ex-edit.em-par{box-shadow:inset 3px 0 0 var(--second)}
+.programa-campos{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px}
 .tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;margin-left:8px;border-radius:99px;background:var(--second-soft);color:var(--second);font:700 11.5px/1 Manrope,system-ui,sans-serif;vertical-align:middle;white-space:nowrap}
+.tag.cinza{background:var(--raised);color:var(--text)}
 
 /* Calendário de treinos e gráficos de linha (Biblioteca): painel, título e o desenho em si */
 .cal,.grafico{gap:14px}
@@ -260,11 +275,33 @@ a.btn{color:inherit;text-decoration:none}
 .sheet-body{overflow:auto;padding:20px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
 .sets-col{display:flex;flex-direction:column;gap:12px}
 .sets{display:flex;flex-direction:column;gap:6px}
-.set-grid{display:grid;grid-template-columns:32px repeat(var(--n,3),minmax(0,1fr)) 44px;gap:8px;align-items:center;padding:0 6px}
+.set-grid{display:grid;grid-template-columns:var(--c1,32px) repeat(var(--n,3),minmax(0,1fr)) 44px;gap:8px;align-items:center;padding:0 6px}
 .sets-head{font-size:12px;font-weight:600;color:var(--muted);text-align:center}
 .set-row{padding:6px;border-radius:14px;transition:background .2s}
 .set-row.done{background:rgba(69,209,154,.09)}
 .set-n{font-size:21px;font-weight:600;color:var(--muted);text-align:center}
+/* Musculação: a letra do tipo de série (A, P, T) e, embaixo, o descanso depois dela (toque para mudar) */
+.set-lado{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.set-tipo{font-size:20px;font-weight:600;line-height:1;color:var(--text)}
+.set-row.preparo .set-tipo{color:var(--muted)}
+/* Última série de trabalho de um exercício com F (da semana 3 em diante): vai até a falha */
+.set-row.falha .set-tipo{color:var(--accent)}
+.set-tipo .f{font-size:12px;vertical-align:super;margin-left:1px}
+/* Lembretes do exercício (bi-set, F e observação) no topo da janela */
+.notas-ex{display:flex;flex-direction:column;gap:4px;padding:10px 12px 10px 28px;border-radius:12px;background:var(--raised);font-size:13px;line-height:1.4;list-style:disc}
+.notas-ex li::marker{color:var(--second)}
+.desc{display:flex;align-items:center;gap:2px;min-height:24px;padding:0 3px;border-radius:6px;font-size:12px;color:var(--muted);cursor:text}
+.desc:hover{background:var(--raised)}
+.desc svg{flex:none}
+.desc input{width:3.2ch;padding:0;background:none;border:0;border-bottom:1px solid var(--line);outline:none;color:var(--text);font-size:12px;font-weight:600;text-align:right}
+.desc input:focus{border-color:var(--accent)}
+.desc input::placeholder{color:var(--placeholder)}
+.legenda-series{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.legenda-series div{display:flex;gap:8px}
+.legenda-series dt{flex:none;width:14px;font-family:var(--num);font-weight:600;color:var(--text)}
+.hist-sets li.preparo{color:var(--muted)}
+.grupo-ex{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.grupo-ex .field{width:auto;min-width:170px;height:38px}
 .check{width:44px;height:44px;border-radius:12px;background:var(--raised);color:var(--muted);display:grid;place-items:center;transition:background .15s,color .15s}
 .check:hover{color:var(--text)}
 .set-row.done .check{background:var(--ok);color:var(--ok-ink)}
@@ -352,6 +389,7 @@ a.btn{color:inherit;text-decoration:none}
   .ex-edit .name{grid-column:1 / 3}
   .ex-edit .del{grid-column:3;grid-row:1}
   .cardio-edit .meta{grid-column:1 / 3}
+  .ex-mais{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px;grid-template-areas:"plano desc falha" "obs obs biset"}
   .sheet-wrap{padding:0}
   .sheet{width:100%;height:100%;border-radius:0}
   .sheet-head{padding:10px 12px 10px 6px}
@@ -388,7 +426,8 @@ const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const DIAS_LONGO = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const SEMANA = [1,2,3,4,5,6,0]; // começa na segunda
-const DESCANSO_PADRAO = 60;
+const DESCANSO_PADRAO = 120; // depois de uma série de trabalho (T): 1,5 a 3 min
+const DESCANSO_PREPARO = 40; // depois de uma série de aquecimento (A) ou de preparação (P): 30 a 40 s
 
 const ICONS = {
   hoje: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -405,6 +444,7 @@ const ICONS = {
   ajustes: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   arquivo: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8M10 12h4"/>',
   mais: '<path d="M7 12l5-5 5 5M7 18l5-5 5 5"/>',
+  biset: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
 };
 const icon = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
@@ -423,7 +463,8 @@ const fmtData = ts => {
   return `${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}${ano}`;
 };
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
-const seriesFeitas = h => h.exercicios.reduce((a, e) => a + (ehCardio(e) ? 0 : e.series.length), 0); // num registro do histórico (só musculação)
+// Séries de trabalho num registro do histórico (só musculação; aquecimento e preparação não contam no volume)
+const seriesFeitas = h => h.exercicios.reduce((a, e) => a + (ehCardio(e) ? 0 : e.series.filter(ehTrabalho).length), 0);
 const diasTxt = dias => dias.length ? SEMANA.filter(d => dias.includes(d)).map(d => DIAS[d]).join(', ') : 'Sem dia definido';
 const fmtDiaMes = ts => {
   const d = new Date(ts);
@@ -431,6 +472,12 @@ const fmtDiaMes = ts => {
 };
 const pad2 = n => String(n).padStart(2, '0');
 const dataISO = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const DIA_MS = 864e5;
+const inicioDoDia = ts => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d; }; // meia-noite do dia (Date)
+const diasDesde = ts => Math.round((inicioDoDia(Date.now()) - inicioDoDia(ts)) / DIA_MS); // 0 hoje, 1 ontem…
+// "2026-11-23" (campo de data) vira a meia-noite desse dia aqui; texto inválido vira null
+const lerDataISO = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); return m ? +new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const temChave = (tabela, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(tabela, k);
 const NUM0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
 const NUM1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 const NUM2 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
@@ -584,6 +631,54 @@ const TIPOS = {
 };
 const tipoDe = e => TIPOS[ehCardio(e) ? 'cardio' : 'forca'];
 
+/* ---------- Tipos de série (musculação) ----------
+   A = aquecimento, P = preparação, T = trabalho. Só as séries de trabalho geram hipertrofia: só elas contam nos
+   gráficos, no recorde e no calendário. Série sem tipo é de trabalho (inclusive todas as de antes desta mudança). */
+const ehTrabalho = s => !s.tipo;
+const tipoSerie = s => s.tipo || 'T';
+const NOME_TIPO = { A: 'Aquecimento', P: 'Preparação', T: 'Trabalho' };
+// Descanso depois de cada tipo de série, em segundos: fica no exercício do treino e muda pela própria série
+const CAMPO_DESCANSO = { A: 'descansoA', P: 'descansoP', T: 'descanso' };
+const descansoDe = (e, s) => e[CAMPO_DESCANSO[tipoSerie(s)]];
+// Séries de trabalho de um exercício da sessão (no cardio, todos os trechos: eles não têm tipo)
+const trabalho = e => e.sets.filter(ehTrabalho);
+// Séries A e P antes das de trabalho, escolhidas em cada exercício do treino. O número é a porcentagem da carga
+// de trabalho. Em Automático, vale a ordem do exercício no grupo muscular do dia (PREPARO).
+const PLANOS = {
+  '': { nome: 'Automático' },
+  APP: { nome: 'A + 2 P', series: [['A', 40], ['P', 60], ['P', 80]] },
+  AP: { nome: 'A + 1 P', series: [['A', 40], ['P', 80]] },
+  PP: { nome: '2 P', series: [['P', 60], ['P', 80]] },
+  P: { nome: '1 P', series: [['P', 80]] },
+  N: { nome: 'Nenhuma', series: [] },
+};
+const PREPARO = ['APP', 'PP', 'P']; // Automático: o 1º do grupo tem A + 2 P, o 2º tem 2 P e, do 3º em diante, 1 P
+const REPS_PREPARO = { 40: 12, 60: 10, 80: 5 }; // até a pessoa registrar as dela
+const SEMANA_FALHA = 3; // F: a última série de trabalho vai até a falha da semana 3 do programa em diante
+const de5em5 = v => Math.max(5, Math.round(v / 5) * 5); // os pesos da academia sobem de 5 em 5 kg
+
+/* Grupo muscular principal de cada exercício: fica na Biblioteca e dá para trocar na página do exercício */
+const GRUPOS = {
+  peito: 'Peito', costas: 'Costas', ombro: 'Ombro', biceps: 'Bíceps', triceps: 'Tríceps', antebraco: 'Antebraço',
+  quadriceps: 'Quadríceps', posterior: 'Posterior de coxa', gluteo: 'Glúteo', panturrilha: 'Panturrilha', abdomen: 'Abdômen', outro: 'Outro',
+};
+// Pelo nome (sem acentos), nesta ordem: vale o primeiro que combina ("crucifixo invertido" é ombro, não peito)
+const GRUPO_POR_NOME = [
+  [/crucifixo invertido|voador invertido|peck? ?deck invertido|face pull|desenvolvimento|elevacao (lateral|frontal|posterior)|remada alta|arnold|deltoide/, 'ombro'],
+  [/hip thrust|elevacao pelvica|gluteo|abducao|abdutora|ponte/, 'gluteo'],
+  [/supino|voador|peck? ?deck|crucifixo|crossover|peitoral|flexao de braco/, 'peito'],
+  [/puxada|pulldown|remada|barra fixa|pullover|serrote|encolhimento/, 'costas'],
+  [/rosca inversa|punho|antebraco/, 'antebraco'],
+  [/rosca|biceps/, 'biceps'],
+  [/triceps|mergulho|paralelas|coice|testa/, 'triceps'],
+  [/panturrilha|gemeos|soleo/, 'panturrilha'],
+  [/stiff|flexora|terra|good morning|posterior/, 'posterior'],
+  [/agachamento|leg press|extensora|bulgaro|afundo|passada|avanco|hack|sissy|quadriceps/, 'quadriceps'],
+  [/abdominal|abdomen|prancha|infra|crunch|obliquo/, 'abdomen'],
+];
+const grupoValido = g => temChave(GRUPOS, g);
+const grupoPeloNome = nome => { const n = chaveNome(nome); return GRUPO_POR_NOME.find(([re]) => re.test(n))?.[1] || 'outro'; };
+
 // Musculação na Biblioteca: carga e repetições mostram a maior, a média e a menor do dia; RIR, a média do dia
 const faixaDoDia = (series, k) => {
   const v = series.map(s => s[k]).filter(x => typeof x === 'number');
@@ -591,9 +686,9 @@ const faixaDoDia = (series, k) => {
 };
 const FORCA = {
   graficos: [
-    { titulo: 'Carga', sub: 'Maior, média e menor carga de cada dia, em kg.', faixa: series => faixaDoDia(series, 'peso'), fmt: v => `${NUM2.format(v)} kg` },
-    { titulo: 'Repetições', sub: 'Maior, média e menor número de repetições por série, em cada dia.', faixa: series => faixaDoDia(series, 'reps'), fmt: v => `${NUM1.format(v)} reps` },
-    { titulo: 'RIR', sub: 'Média de cada dia: quantas repetições ainda daria para fazer antes da falha.', valor: series => faixaDoDia(series, 'rir')?.med, fmt: v => `RIR ${NUM1.format(v)}` },
+    { titulo: 'Carga', sub: 'Maior, média e menor carga das séries de trabalho (T) de cada dia, em kg.', faixa: series => faixaDoDia(series, 'peso'), fmt: v => `${NUM2.format(v)} kg` },
+    { titulo: 'Repetições', sub: 'Maior, média e menor número de repetições por série de trabalho (T), em cada dia.', faixa: series => faixaDoDia(series, 'reps'), fmt: v => `${NUM1.format(v)} reps` },
+    { titulo: 'RIR', sub: 'Média das séries de trabalho (T) de cada dia: quantas repetições ainda daria para fazer antes da falha.', valor: series => faixaDoDia(series, 'rir')?.med, fmt: v => `RIR ${NUM1.format(v)}` },
   ],
   recorde: { rotulo: 'Maior carga', valor: series => faixaDoDia(series, 'peso')?.max, fmt: v => `${NUM2.format(v)} kg` },
 };
@@ -618,15 +713,19 @@ function resumoCardio(e, trechos) {
 }
 
 /* ---------- Dados (salvos neste aparelho) ---------- */
-const VERSAO = 3; // 3: Biblioteca de exercícios (criada por sincronizarBiblioteca a cada carga)
+const VERSAO = 5; // 3: Biblioteca de exercícios (criada por sincronizarBiblioteca a cada carga); 4: séries A, P e T; 5: programa de 5 dias
 
 // Repetições são texto para aceitar faixas ("12–15"), tempo ("30–45 s / 15") e "por lado"
 const textoReps = v => String(v ?? '').trim().replace(/\s*-\s*/g, '–');
 // Primeiro número da meta, usado como sugestão no campo de repetições ("12–15" → 12)
 const repsAlvo = reps => { const n = parseInt(String(reps).match(/\d+/)?.[0], 10); return Number.isFinite(n) ? n : ''; };
 
+// preparo: as séries A e P (PLANOS); falha: F; biset: faz par com o próximo exercício do treino; obs: observação
 function novoExercicio(dados = {}) {
-  return { id: uid(), nome: '', series: 3, reps: '10', descanso: DESCANSO_PADRAO, prioridade: false, ...dados };
+  return {
+    id: uid(), nome: '', series: 3, reps: '10', descanso: DESCANSO_PADRAO, descansoA: DESCANSO_PREPARO, descansoP: DESCANSO_PREPARO,
+    prioridade: false, preparo: '', falha: false, biset: false, obs: '', ...dados,
+  };
 }
 function novoCardio() { return { id: uid(), tipo: 'cardio', aparelho: 'esteira', meta: '' }; }
 // Nova série ou trecho; campos de escolha (o esforço da bike) nunca ficam vazios e já vêm com a sugestão
@@ -636,65 +735,74 @@ function novaLinha(e, i, anteriores) {
   return { ...Object.fromEntries(campos.map(k => [k, escolhas.includes(k) ? ph[k] : ''])), feita: false };
 }
 
-// Programa Push/Pull/Legs, de segunda (1) a sábado (6). Formato: [exercício, séries, repetições, prioridade]
+// Programa de 5 dias com séries A, P e T: segunda (1), terça, quarta, sexta e sábado (6); quinta é livre.
+// Cada exercício: [nome, séries de trabalho, repetições, séries A e P (PLANOS), descanso depois da T em s, marcas, observação].
+// Marcas: F = a última série de trabalho vai até a falha (da semana 3 em diante); B = bi-set com o próximo.
+// Com uma lista de nomes, fica o que você já tem (o do programa anterior, antes do nome da tabela nova).
+// O primeiro exercício de cada dia é a prioridade.
+const NOME_PROGRAMA = 'Programa de 5 dias';
 const PROGRAMA = [
-  { nome: 'Push A', foco: 'Ombro, peito, tríceps, core', dia: 1, ex: [
-    ['Elevação lateral unilateral na polia', 3, '12–15', true],
-    ['Desenvolvimento com halteres', 3, '8–12'],
-    ['Supino inclinado com halteres', 3, '10–12'],
-    ['Voador articulado (pec deck)', 3, '12–15'],
-    ['Tríceps francês na polia com corda', 3, '12–15'],
-    ['Abdominal na máquina', 3, '12–15'],
+  { nome: 'Push', foco: 'Ombro, peito e tríceps', dia: 1, ex: [
+    ['Elevação lateral unilateral na polia', 3, '10–15', 'AP', 90, 'F'],
+    ['Desenvolvimento com halteres', 3, '6–10', 'PP', 150],
+    ['Supino inclinado com halteres', 3, '8–12', 'APP', 150],
+    [['Voador articulado (pec deck)', 'Voador'], 2, '10–15', 'P', 90, 'F'],
+    [['Tríceps francês na polia com corda', 'Tríceps francês na polia (acima da cabeça)'], 3, '8–12', 'PP', 120, 'F'],
+    ['Tríceps pulley com corda', 2, '10–15', 'P', 90, 'F'],
   ] },
-  { nome: 'Pull A', foco: 'Costas, bíceps, posterior de ombro', dia: 2, ex: [
-    ['Puxada alta pegada neutra', 4, '6–10', true],
-    ['Remada cavalinha articulada aberta', 3, '10–12'],
-    ['Remada serrote com halter', 3, '10–12 por lado'],
-    ['Crucifixo invertido na polia', 2, '15'],
-    ['Rosca direta com barra na polia', 3, '10–12'],
-    ['Rosca martelo com halteres', 2, '10–12'],
+  { nome: 'Pull', foco: 'Costas, bíceps e posterior de ombro', dia: 2, ex: [
+    [['Puxada alta pegada neutra', 'Puxada alta com pegada neutra'], 3, '6–10', 'APP', 150, 'F'],
+    [['Remada cavalinha articulada aberta', 'Remada cavalinha articulada aberta (cotovelo alto)'], 2, '8–12', 'PP', 150, '', 'Cotovelo alto.'],
+    [['Remada serrote com halter', 'Remada serrote (cotovelo rente ao corpo)'], 2, '8–12 por lado', 'P', 120, '', 'Cotovelo rente ao corpo.'],
+    ['Crucifixo invertido na polia', 3, '10–15', 'P', 90, 'F'],
+    [['Rosca direta com barra na polia', 'Rosca direta com barra'], 3, '8–12', 'PP', 120, 'F'],
+    ['Rosca martelo com halteres', 2, '8–12', 'P', 90, 'F'],
   ] },
-  { nome: 'Legs A', foco: 'Quadríceps, posterior, panturrilha', dia: 3, ex: [
-    ['Agachamento livre com barra', 4, '6–10', true],
-    ['Leg press angular', 3, '10–12'],
-    ['Cadeira extensora', 3, '12–15'],
-    ['Stiff com barra', 3, '10–12'],
-    ['Panturrilha em pé na máquina', 3, '12–15'],
-    ['Abdominal na máquina', 3, '12–15'],
+  { nome: 'Pernas A', foco: 'Quadríceps, posterior, panturrilha e abdômen', dia: 3, ex: [
+    [['Agachamento livre com barra', 'Agachamento livre'], 3, '6–10', 'APP', 180, '', 'Opcional: mais 1 P com 90–100% × 1.'],
+    [['Leg press angular', 'Leg press 45°', 'Leg press 45° ou angular'], 2, '8–12', 'P', 180, 'F', 'Pode ser no 45° ou no angular.'],
+    ['Cadeira extensora', 2, '10–15', 'PP', 120, 'F'],
+    ['Mesa flexora', 3, '8–12', 'P', 120, 'F'],
+    [['Panturrilha em pé na máquina', 'Panturrilha em pé'], 3, '6–8', 'P', 90, 'FB'],
+    ['Abdominal na máquina', 3, '8–12', 'P', 90, 'F'],
   ] },
-  { nome: 'Push B', foco: 'Ombro, peito reto, tríceps, core', dia: 4, ex: [
-    ['Elevação lateral com halteres', 3, '12–15', true],
-    ['Elevação frontal com halter', 2, '12–15'],
-    ['Supino reto com barra', 4, '8–10'],
-    ['Supino inclinado articulado (máquina)', 3, '10–12'],
-    ['Tríceps pulley com corda', 3, '12–15'],
-    ['Prancha abdominal + infra', 3, '30–45 s / 15'],
+  { nome: 'Superiores (V + braços)', foco: 'Costas, ombro, braços e peito', dia: 5, ex: [
+    ['Barra fixa pronada', 3, '6–10', 'AP', 150, '', 'A com uma puxada leve.'],
+    ['Elevação lateral com halteres', 3, '10–15', 'AP', 90, 'F'],
+    ['Tríceps testa', 3, '8–12', 'PP', 90, 'F', 'Para ganhar tempo, dá para ligar o bi-set com a rosca.'],
+    ['Rosca Bayesian na polia (braço atrás do corpo)', 3, '8–12', 'P', 90, 'F'],
+    [['Supino reto com barra', 'Supino reto (barra ou máquina)'], 3, '6–10', 'APP', 150, '', 'Pode ser na máquina. Com barra, sem ir à falha.'],
+    ['Pullover na polia (braços estendidos)', 2, '10–15', 'P', 90, 'F'],
   ] },
-  { nome: 'Pull B', foco: 'Espessura das costas, bíceps, antebraço', dia: 5, ex: [
-    ['Remada com barra curvada', 4, '8–10', true],
-    ['Pulldown pegada larga', 3, '10–12'],
-    ['Face pull na polia', 3, '15'],
-    ['Rosca scott na máquina', 3, '10–12'],
-    ['Rosca inversa com barra', 2, '12–15'],
-    ['Flexão de punho na polia', 2, '15'],
-  ] },
-  { nome: 'Legs B', foco: 'Quadríceps e glúteo, posterior, panturrilha', dia: 6, ex: [
-    ['Agachamento búlgaro com halteres', 4, '8–10 por lado', true],
-    ['Leg press 45°', 3, '10–12'],
-    ['Cadeira extensora', 3, '12–15'],
-    ['Hip thrust com barra', 3, '10–12'],
-    ['Mesa flexora', 3, '10–12'],
-    ['Panturrilha sentado (sóleo)', 3, '15–20'],
+  { nome: 'Pernas B + extras', foco: 'Posterior, glúteo, panturrilha, abdômen, ombro e trapézio', dia: 6, ex: [
+    [['Stiff com barra', 'Stiff ou RDL'], 3, '6–10', 'APP', 180, '', 'Pode ser RDL.'],
+    [['Agachamento búlgaro com halteres', 'Agachamento búlgaro'], 3, '8–12 por perna', 'AP', 120, '', 'A só com o peso do corpo.'],
+    ['Cadeira flexora', 2, '10–15', 'P', 120, 'F'],
+    ['Panturrilha no leg press', 3, '8–12', 'P', 90, 'FB'],
+    ['Infra na barra, enrolando a pelve', 3, '8–12', 'P', 90, 'F', 'P com os joelhos dobrados.'],
+    ['Elevação lateral na máquina ou na polia', 3, '10–15', 'AP', 90, 'F'],
+    ['Encolhimento com halteres', 2, '8–12', 'P', 90, 'F'],
   ] },
 ];
-const programa = () => PROGRAMA.map(t => ({
+// Um exercício do programa: os nomes possíveis e o que vai para o treino
+function lerLinha([nomes, series, reps, preparo, descanso, marcas = '', obs = '']) {
+  return { nomes: [].concat(nomes), cfg: { series, reps, preparo, descanso, falha: marcas.includes('F'), biset: marcas.includes('B'), obs } };
+}
+// Os treinos do programa. existente(nomes, dia) devolve o exercício que você já tem para uma linha, { nome, id,
+// prioridade } (id e prioridade só se ele já está no treino desse dia: continua o mesmo item, com a sua estrela);
+// sem ele, vale o primeiro nome da lista e a prioridade é o primeiro exercício do dia
+const treinosDoPrograma = (existente = () => null) => PROGRAMA.map(t => ({
   id: uid(), nome: t.nome, foco: t.foco, dias: [t.dia],
-  exercicios: t.ex.map(([nome, series, reps, prioridade = false]) => novoExercicio({ nome, series, reps, prioridade })),
+  exercicios: t.ex.map((linha, i) => {
+    const { nomes, cfg } = lerLinha(linha), ja = existente(nomes, t.dia);
+    return novoExercicio({ ...cfg, id: ja?.id || uid(), nome: ja?.nome || nomes[0], prioridade: ja?.prioridade ?? i === 0 });
+  }),
 }));
 
 function exemplo() {
-  const d = { v: VERSAO, treinos: programa(), sessao: null, historico: [], perfil: { peso: '', altura: '' } };
+  const d = { v: VERSAO, treinos: treinosDoPrograma(), programa: { nome: NOME_PROGRAMA, inicio: null }, programas: [], sessao: null, historico: [], perfil: { peso: '', altura: '' } };
   sincronizarBiblioteca(d, []);
+  podarBiblioteca(d);
   return d;
 }
 
@@ -708,14 +816,17 @@ const chaveDe = e => ehCardio(e) ? `cardio:${e.aparelho}` : `forca:${chaveNome(n
 const exPorId = id => S.biblioteca.find(x => x.id === id);
 // Item de treino que conta para a Biblioteca: cardio ou exercício com nome
 const nomeado = e => ehCardio(e) || !!chaveNome(e.nome);
-function* itensNomeados(d) {
-  for (const t of d.treinos) for (const e of t.exercicios) if (nomeado(e)) yield { t, e };
+const forcaNomeada = e => !ehCardio(e) && nomeado(e);
+// Itens com nome dos treinos (e, com salvos, também os dos Programas salvos)
+function* itensNomeados(d, salvos = false) {
+  const treinos = salvos ? [...d.treinos, ...d.programas.flatMap(p => p.treinos)] : d.treinos;
+  for (const t of treinos) for (const e of t.exercicios) if (nomeado(e)) yield { t, e };
 }
 
 // Registro da Biblioteca de um item (de treino, da sessão, do histórico ou de um backup)
 const registro = (x, id = uid(), arquivado = false) => ehCardio(x)
   ? { id, tipo: 'cardio', aparelho: APARELHOS[x.aparelho] ? x.aparelho : 'esteira', arquivado }
-  : { id, nome: nomeOuPadrao(x), arquivado };
+  : { id, nome: nomeOuPadrao(x), arquivado, grupo: grupoValido(x.grupo) ? x.grupo : grupoPeloNome(x.nome) };
 // Índice por chave: acha o registro de um item e cria o que falta (novo = o registro a incluir, se já existe um)
 function indiceBiblioteca(d) {
   const porChave = new Map(d.biblioteca.map(ex => [chaveDe(ex), ex]));
@@ -736,32 +847,101 @@ function sincronizarBiblioteca(d, lista) {
     porId.set(ex.id, achar(ex, ex)); // nomes repetidos viram um exercício só
   }
   for (const e of [...d.historico.flatMap(h => h.exercicios), ...(d.sessao?.exercicios || [])]) e.exId = (porId.get(e.exId) || achar(e)).id;
-  podarBiblioteca(d);
 }
 
-// Roda a cada gravação: todo exercício dos treinos tem registro (e nunca fica arquivado), e sai o que era
-// só um nome digitado (sem registros, fora dos treinos e não arquivado)
+// Roda a cada gravação (e no fim de normalizar): todo exercício dos treinos tem registro (e nunca fica arquivado),
+// e sai o que era só um nome digitado (sem registros, fora dos treinos e dos Programas salvos, e não arquivado).
+// O de um programa salvo fica, com o grupo muscular escolhido, para quando o programa voltar a ser usado.
 function podarBiblioteca(d) {
   const achar = indiceBiblioteca(d), emUso = new Set(), comDados = new Set();
   for (const { e } of itensNomeados(d)) emUso.add(achar(e));
   for (const h of d.historico) for (const e of h.exercicios) comDados.add(e.exId);
   for (const e of d.sessao?.exercicios || []) comDados.add(e.exId);
+  const salvos = new Set([...itensNomeados(d, true)].map(({ e }) => chaveDe(e)));
   d.biblioteca = d.biblioteca.filter(ex => {
     if (emUso.has(ex)) ex.arquivado = false;
-    return emUso.has(ex) || ex.arquivado || comDados.has(ex.id);
+    return emUso.has(ex) || ex.arquivado || comDados.has(ex.id) || salvos.has(chaveDe(ex));
   });
 }
 
-// Dados da versão 1: tira o treino de exemplo antigo (se nunca foi mexido nem usado) e inclui o programa
-function adicionarPrograma(d) {
+// Dados da versão 1: tira o treino de exemplo antigo (se nunca foi mexido nem usado). O programa entra na versão 5.
+function tirarExemploAntigo(d) {
   const usado = id => d.sessao?.treinoId === id || d.historico.some(h => h.treinoId === id);
   const exemploAntigo = t => t.nome === 'Treino A' && t.exercicios.map(e => e.nome).join('|') === 'Remada alta|Leg press' && !usado(t.id);
   d.treinos = d.treinos.filter(t => !exemploAntigo(t));
-  for (const t of programa()) if (!d.treinos.some(x => x.nome === t.nome)) d.treinos.push(t);
 }
 
-// Migrações por versão: cada uma recebe os dados já validados da versão anterior
-const MIGRACOES = { 2: adicionarPrograma };
+// Versão 4 (séries A, P e T): o descanso de 60 s, o padrão antigo, vira 120 s, o indicado para as séries de trabalho.
+// Quem tinha outro tempo continua com ele.
+function descansoDeTrabalho(d) {
+  for (const e of [...d.treinos.flatMap(t => t.exercicios), ...(d.sessao?.exercicios || [])]) if (e.descanso === 60) e.descanso = DESCANSO_PADRAO;
+}
+
+/* ---------- Programas salvos ---------- */
+// Guarda uma cópia dos treinos de agora em Programas salvos (o mais recente fica em cima)
+function guardarPrograma(d, nome = d.programa.nome) {
+  d.programas.unshift({ id: uid(), nome: nome || 'Programa', inicio: d.programa.inicio, salvo: Date.now(), treinos: structuredClone(d.treinos) });
+}
+// Exercícios que saíram dos treinos vão para o arquivo da Biblioteca, com todos os registros
+function arquivarQueSaiu(d, antes) {
+  const achar = indiceBiblioteca(d), ficam = new Set([...itensNomeados(d)].map(({ e }) => chaveDe(e)));
+  for (const t of antes) for (const e of t.exercicios) if (nomeado(e) && !ficam.has(chaveDe(e))) achar(e).arquivado = true;
+}
+
+// Versão 5: entra o programa de 5 dias e os treinos de agora vão para Programas salvos. O exercício que você já tem
+// continua com o nome e o histórico: só muda de dia, séries, repetições, séries A e P e descanso. Vale um dos nomes
+// da linha (no treino do mesmo dia, em outro treino ou na Biblioteca) ou, por último, um nome parecido nos treinos:
+// o mesmo começo, com mais palavras no fim ("Abdominal na máquina (crunch)"), e o mesmo grupo muscular.
+// O cardio dos treinos de um dia continua no treino novo desse dia (no começo, se vinha antes da musculação);
+// treinos sem musculação ficam como estão.
+function programaNovo(d) {
+  const antes = d.treinos;
+  const forca = t => t.exercicios.filter(forcaNomeada);
+  const velhos = antes.filter(t => forca(t).length), todos = velhos.flatMap(forca);
+  const doDia = dia => velhos.filter(t => t.dias.includes(dia));
+  const registroDe = indiceBiblioteca(d);
+  const escolhidos = new Set(); // exercício já escolhido por uma linha não serve de parecido para outra
+  const itensUsados = new Set(), treinosUsados = new Set(); // cada um empresta o id (o treino, também o cardio) uma vez só
+  const parecido = (k, x, grupo) => {
+    const j = chaveNome(x.nome), [curto, longo] = k.length < j.length ? [k, j] : [j, k];
+    return curto.split(' ').length >= 2 && longo.startsWith(curto + ' ') && registroDe(x).grupo === grupo;
+  };
+  const existente = (nomes, dia) => {
+    const chaves = nomes.map(chaveNome), grupo = grupoPeloNome(nomes[0]), daqui = doDia(dia).flatMap(forca);
+    const igual = x => !ehCardio(x) && chaves.includes(chaveNome(x.nome));
+    const perto = x => !escolhidos.has(x) && chaves.some(k => parecido(k, x, grupo));
+    const x = daqui.find(igual) || todos.find(igual) || d.biblioteca.find(igual) || daqui.find(perto) || todos.find(perto);
+    if (!x) return null;
+    escolhidos.add(x);
+    if (!daqui.includes(x) || itensUsados.has(x)) return { nome: x.nome };
+    itensUsados.add(x);
+    return { nome: x.nome, id: x.id, prioridade: x.prioridade };
+  };
+  if (antes.length) guardarPrograma(d, 'Programa anterior');
+  d.treinos = treinosDoPrograma(existente);
+  for (const t of d.treinos) {
+    const daqui = doDia(t.dias[0]).filter(v => !treinosUsados.has(v));
+    if (daqui.length) t.id = daqui[0].id;
+    for (const v of daqui) {
+      treinosUsados.add(v);
+      const i = v.exercicios.findIndex(forcaNomeada);
+      t.exercicios = [...v.exercicios.slice(0, i).filter(ehCardio), ...t.exercicios, ...v.exercicios.slice(i + 1).filter(ehCardio)];
+    }
+  }
+  // Treinos sem musculação continuam; o cardio de um treino que não tem mais dia no programa vira um treino de cardio
+  const dias = new Set(PROGRAMA.map(p => p.dia));
+  for (const t of antes) {
+    if (!velhos.includes(t)) d.treinos.push(t);
+    else if (!t.dias.some(x => dias.has(x)) && t.exercicios.some(ehCardio)) d.treinos.push({ ...t, nome: 'Cardio', foco: '', exercicios: t.exercicios.filter(ehCardio) });
+  }
+  d.programa = { nome: NOME_PROGRAMA, inicio: null };
+  arquivarQueSaiu(d, antes);
+}
+// Dados de antes da versão 5: o programa novo entrou (e os treinos que havia foram para Programas salvos)
+const antesDoPrograma = bruto => (Number(bruto?.v) || 1) < 5;
+
+// Migrações por versão: cada uma recebe os dados já validados da versão anterior, com a Biblioteca ligada
+const MIGRACOES = { 2: tirarExemploAntigo, 4: descansoDeTrabalho, 5: programaNovo };
 
 function normalizar(d) {
   if (!d || typeof d !== 'object' || !Array.isArray(d.treinos)) return null;
@@ -771,6 +951,8 @@ function normalizar(d) {
   const linhas = (lista, campos, comFeita) => objetos(lista).map(s => ({
     ...Object.fromEntries(campos.map(k => [k, lerCampo(k, s[k])])),
     ...(s.mais === true && { mais: true }), // "ainda dava para fazer muito mais" (só guardado quando marcado)
+    // Aquecimento ou preparação, com a % da carga de trabalho (as séries de trabalho não levam tipo)
+    ...((s.tipo === 'A' || s.tipo === 'P') && { tipo: s.tipo, pct: clampInt(s.pct, 1, 100, s.tipo === 'A' ? 40 : 80) }),
     ...(comFeita && { feita: !!s.feita }),
   }));
   const corpo = c => ({ peso: lerCampo('peso', c?.peso), altura: lerCampo('altura', c?.altura) });
@@ -780,14 +962,24 @@ function normalizar(d) {
       id: String(e.id || uid()), nome: String(e.nome ?? ''),
       series: clampInt(e.series, 1, 99, padrao.series), reps: textoReps(e.reps) || padrao.reps,
       descanso: clampInt(e.descanso, 5, 600, padrao.descanso), prioridade: !!e.prioridade,
+      descansoA: clampInt(e.descansoA, 5, 600, padrao.descansoA), descansoP: clampInt(e.descansoP, 5, 600, padrao.descansoP),
+      preparo: temChave(PLANOS, e.preparo) ? e.preparo : '', falha: !!e.falha, biset: !!e.biset, obs: String(e.obs ?? '').slice(0, 100),
     };
+  const treino = t => ({
+    id: String(t.id || uid()), nome: String(t.nome ?? ''), foco: String(t.foco ?? ''),
+    dias: Array.isArray(t.dias) ? [...new Set(t.dias.map(Number).filter(n => Number.isInteger(n) && n >= 0 && n <= 6))] : [],
+    exercicios: objetos(t.exercicios).map(item),
+  });
+  // Início da semana 1 do programa (meia-noite do dia) ou null, enquanto ele não começou
+  const inicio = v => Number(v) > 0 ? +inicioDoDia(Number(v)) : null;
   const sessaoOk = d.sessao && Array.isArray(d.sessao.exercicios) && d.sessao.exercicios.every(e => e && Array.isArray(e.sets));
   const saida = {
     v: VERSAO,
-    treinos: objetos(d.treinos).map(t => ({
-      id: String(t.id || uid()), nome: String(t.nome ?? ''), foco: String(t.foco ?? ''),
-      dias: Array.isArray(t.dias) ? [...new Set(t.dias.map(Number).filter(n => Number.isInteger(n) && n >= 0 && n <= 6))] : [],
-      exercicios: objetos(t.exercicios).map(item),
+    treinos: objetos(d.treinos).map(treino),
+    programa: { nome: String(d.programa?.nome ?? '').slice(0, 40), inicio: inicio(d.programa?.inicio) },
+    programas: objetos(d.programas).filter(p => Array.isArray(p.treinos)).map(p => ({
+      id: String(p.id || uid()), nome: String(p.nome ?? '').slice(0, 40), inicio: inicio(p.inicio), salvo: Number(p.salvo) || Date.now(),
+      treinos: objetos(p.treinos).map(treino),
     })),
     sessao: sessaoOk ? {
       treinoId: String(d.sessao.treinoId ?? ''), nome: String(d.sessao.nome ?? 'Treino'), inicio: Number(d.sessao.inicio) || Date.now(),
@@ -817,19 +1009,24 @@ function normalizar(d) {
     }),
     perfil: corpo(d.perfil),
   };
-  for (let v = (Number(d.v) || 1) + 1; v <= VERSAO; v++) MIGRACOES[v]?.(saida);
   sincronizarBiblioteca(saida, d.biblioteca);
+  for (let v = (Number(d.v) || 1) + 1; v <= VERSAO; v++) MIGRACOES[v]?.(saida);
+  podarBiblioteca(saida); // depois das migrações: registro na Biblioteca também para o que elas puseram nos treinos
   return saida;
 }
 
 function carregar() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = normalizar(JSON.parse(raw)); if (d) return d; }
+    if (raw) {
+      const j = JSON.parse(raw), d = normalizar(j);
+      if (d) { programaTrocado = antesDoPrograma(j); return d; }
+    }
   } catch { /* dados ilegíveis: começa com o exemplo */ }
   return exemplo();
 }
 
+let programaTrocado = false; // o programa novo entrou ao abrir esta versão: grava na hora e avisa
 let S = carregar();
 let saveTimer = 0;
 function salvar() { clearTimeout(saveTimer); saveTimer = setTimeout(salvarAgora, 300); }
@@ -853,8 +1050,10 @@ document.addEventListener('visibilitychange', () => {
 const ui = {
   tab: 'hoje', exAberto: null, histAberto: new Set(), desfazer: null, toastT: 0, fecharDialogo: null, periodo: '12',
   libAberto: null, libFiltro: 'todos', libBusca: '', periodoEx: '12', // Biblioteca: exercício aberto, filtros e período dos gráficos
+  progAberto: new Set(), // Programas salvos abertos na aba Treinos
 };
 const treinoPorId = id => S.treinos.find(t => t.id === id);
+const programaPorId = id => S.programas.find(p => p.id === id);
 const exDoTreino = (tid, id) => treinoPorId(tid)?.exercicios.find(e => e.id === id);
 const exSessao = id => S.sessao?.exercicios.find(e => e.id === id);
 const exAberto = () => ui.exAberto ? exSessao(ui.exAberto) : null;
@@ -879,6 +1078,35 @@ function ultimasSeries(exId) {
   return [];
 }
 
+// Semana do programa (1, 2, 3…), de 7 em 7 dias desde o primeiro treino; 0 enquanto ele não começou
+function semanaDoPrograma() {
+  const ini = S.programa.inicio;
+  return ini ? Math.floor(diasDesde(ini) / 7) + 1 : 0;
+}
+// F: a última série de trabalho vai até a falha (RIR 0), da semana 3 do programa em diante (sem F, undefined)
+const serieAteFalha = e => e.falha && semanaDoPrograma() >= SEMANA_FALHA ? trabalho(e).slice(-1)[0] : undefined;
+
+// Bi-set: o exercício marcado faz par com o próximo da lista, se os dois forem de musculação
+// (lido de cima para baixo: o 2º de um par não começa outro)
+function paresBiset(lista) {
+  const pares = new Map();
+  lista.forEach((e, i) => {
+    const prox = lista[i + 1];
+    if (e.biset && !pares.has(e) && prox && !ehCardio(e) && !ehCardio(prox)) {
+      pares.set(e, { par: prox, primeiro: true });
+      pares.set(prox, { par: e, primeiro: false });
+    }
+  });
+  return pares;
+}
+// O par de um exercício do treino em andamento: { par, primeiro } ou nada
+const parDoBiset = e => S.sessao && paresBiset(S.sessao.exercicios).get(e);
+// O app vai para o outro exercício do par: ele não foi finalizado e ainda tem série de trabalho por fazer
+const vaiParaOPar = b => !!b && !b.par.feito && trabalho(b.par).some(x => !x.feita);
+// Descanso depois de uma série: o do tipo dela. No bi-set, depois de uma série de trabalho do 1º exercício do par
+// não tem descanso (0: vem o outro exercício), enquanto o outro ainda tiver série de trabalho por fazer
+const descansoApos = (e, s, b = parDoBiset(e)) => ehTrabalho(s) && b?.primeiro && vaiParaOPar(b) ? 0 : descansoDe(e, s);
+
 /* ---------- Telas ---------- */
 const TELAS = { hoje: viewHoje, treinos: viewTreinos, biblioteca: viewBiblioteca, historico: viewHistorico, ajustes: viewAjustes };
 // O que a tela pede para fazer depois de entrar na página: desenhar os gráficos, que precisam da largura
@@ -901,13 +1129,17 @@ function render(animar = false) {
 const filtrosHTML = (opcoes, act, atual, rotulo) => `<div class="filtros" role="group" aria-label="${rotulo}">${opcoes.map(([k, texto]) =>
   `<button data-act="${act}" data-p="${k}" aria-pressed="${atual === k}">${texto}</button>`).join('')}</div>`;
 
-const metaTxt = e => ehCardio(e) ? esc(e.meta || 'Cardio') : `${e.series} × ${esc(e.reps)}`;
+// "3 × 10–15", com F quando a última série vai até a falha
+const metaTxt = e => ehCardio(e) ? esc(e.meta || 'Cardio') : `${e.series} × ${esc(e.reps)}${e.falha ? ' F' : ''}`;
 // "6 exercícios e 1 cardio"
 function contagemItens(itens) {
   const nCardio = itens.filter(ehCardio).length, nForca = itens.length - nCardio;
   return [nForca && plural(nForca, 'exercício', 'exercícios'), nCardio && plural(nCardio, 'cardio', 'cardios')].filter(Boolean).join(' e ') || 'Nenhum exercício';
 }
-const tagPrioridade = e => e.prioridade ? '<span class="tag">Prioridade</span>' : '';
+// Etiquetas do exercício: prioridade e bi-set (b: o par dele, de paresBiset)
+const tagsEx = (e, b) => (e.prioridade ? '<span class="tag">Prioridade</span>' : '') + (b ? '<span class="tag cinza">Bi-set</span>' : '');
+// Um item na lista de um treino: nome, etiquetas e meta
+const linhaResumo = (e, b) => `<li><span class="tc-nome">${esc(nomeItem(e) || 'Sem nome')}${tagsEx(e, b)}</span><span class="num">${metaTxt(e)}</span></li>`;
 
 function viewHoje() {
   if (S.sessao) return viewSessao();
@@ -915,20 +1147,24 @@ function viewHoje() {
   diaRenderizado = agora.toDateString();
   const doDia = S.treinos.filter(t => t.dias.includes(wd));
   const outros = S.treinos.filter(t => !t.dias.includes(wd));
-  let h = `<section class="page"><header class="page-head"><div><p>Hoje</p><h1>${DIAS_LONGO[wd]}, ${agora.getDate()} ${MESES[agora.getMonth()]}</h1></div></header>`;
+  const semana = semanaDoPrograma();
+  let h = `<section class="page"><header class="page-head"><div><p>Hoje</p><h1>${DIAS_LONGO[wd]}, ${agora.getDate()} ${MESES[agora.getMonth()]}</h1></div>${semana > 0 ? `<span class="small muted">Semana ${semana} do programa</span>` : ''}</header>`;
   if (!S.treinos.length) {
     h += `<div class="panel empty"><h2>Nenhum treino criado</h2><p class="muted">Crie um treino com seus exercícios e escolha os dias da semana.</p><button class="btn primary" data-act="novo-treino">+ Criar treino</button></div>`;
   } else if (!doDia.length) {
     h += `<div class="panel empty"><h2>Nenhum treino marcado para ${DIAS_LONGO[wd].toLowerCase()}</h2><p class="muted">Escolha um treino abaixo para fazer hoje, ou marque os dias na aba Treinos.</p></div>`;
   }
-  h += doDia.map(t => `
+  h += doDia.map(t => {
+    const pares = paresBiset(t.exercicios);
+    return `
     <article class="panel">
       <div class="tc-head"><div><h2>${esc(t.nome || 'Sem nome')}</h2>${t.foco ? `<p class="small muted">${esc(t.foco)}</p>` : ''}</div><span class="small muted">${contagemItens(t.exercicios)}</span></div>
       ${t.exercicios.length
-        ? `<ul class="tc-ex">${t.exercicios.map(e => `<li><span class="tc-nome">${esc(nomeItem(e) || 'Sem nome')}${tagPrioridade(e)}</span><span class="num">${metaTxt(e)}</span></li>`).join('')}</ul>`
+        ? `<ul class="tc-ex">${t.exercicios.map(e => linhaResumo(e, pares.get(e))).join('')}</ul>`
         : '<p class="muted">Este treino ainda não tem exercícios.</p>'}
       <button class="btn primary block" data-act="iniciar" data-id="${esc(t.id)}">Iniciar treino</button>
-    </article>`).join('');
+    </article>`;
+  }).join('');
   if (outros.length) {
     h += `<h2 class="section-title">${doDia.length ? 'Outros treinos' : 'Seus treinos'}</h2><div class="row-list">${outros.map(t => `
       <div class="row"><div class="row-main"><b>${esc(t.nome || 'Sem nome')}</b><span class="small muted">${diasTxt(t.dias)}</span></div>
@@ -941,6 +1177,7 @@ function viewSessao() {
   const s = S.sessao;
   const total = s.exercicios.length;
   const feitos = s.exercicios.filter(e => e.feito).length;
+  const pares = paresBiset(s.exercicios);
   return `<section class="page">
     <header class="page-head"><div><p>Treino em andamento</p><h1>${esc(s.nome)}</h1></div><span class="small muted">Começou às ${fmtHora(s.inicio)}</span></header>
     <div class="progress">
@@ -949,12 +1186,13 @@ function viewSessao() {
     </div>
     <button id="timer-pill" class="timer-pill" data-act="abrir-ex" hidden><span id="pill-label">Descanso</span><span id="pill-time" class="num"></span></button>
     <ul class="ex-list">${s.exercicios.map(e => {
-      const feitas = e.sets.filter(x => x.feita);
+      // Na musculação, a contagem é das séries de trabalho (aquecimento e preparação não contam)
+      const conta = trabalho(e), feitas = conta.filter(x => x.feita);
       const meta = !e.feito ? metaTxt(e) : ehCardio(e) ? resumoCardio(e, feitas) : plural(feitas.length, 'série feita', 'séries feitas');
       return `<li><button class="ex-item ${estadoEx(e)}" data-act="abrir-ex" data-id="${esc(e.id)}">
         <span class="status-ic">${e.feito ? icon('check', 18) : ''}</span>
-        <span class="ex-main"><span class="ex-name">${esc(nomeItem(e))}</span><span class="ex-meta">${meta}${tagPrioridade(e)}</span></span>
-        <span class="ex-side num">${e.feito ? 'Feito' : `${feitas.length}/${e.sets.length}`}</span>
+        <span class="ex-main"><span class="ex-name">${esc(nomeItem(e))}</span><span class="ex-meta">${meta}${tagsEx(e, pares.get(e))}</span></span>
+        <span class="ex-side num">${e.feito ? 'Feito' : `${feitas.length}/${conta.length}`}</span>
       </button></li>`;
     }).join('')}</ul>
     <p class="hint">Toque em qualquer exercício, na ordem que quiser.</p>
@@ -965,13 +1203,56 @@ function viewSessao() {
 function viewTreinos() {
   return `<section class="page">
     <header class="page-head"><div><h1>Treinos</h1><p>Monte cada treino e escolha os dias da semana.</p></div><button class="btn primary" data-act="novo-treino">+ Novo treino</button></header>
+    ${programaHTML()}
     ${S.treinos.length ? S.treinos.map(cardEditor).join('') : '<div class="panel empty"><p class="muted">Nenhum treino ainda. Toque em "Novo treino" para começar.</p></div>'}
+    ${programasHTML()}
     <datalist id="nomes-exercicios">${S.biblioteca.filter(x => !ehCardio(x)).map(x => `<option value="${esc(x.nome)}">`).join('')}</datalist>
   </section>`;
 }
 
+// O programa em uso: nome e início da semana 1 (que conta para o F)
+function programaHTML() {
+  const ini = S.programa.inicio, semana = semanaDoPrograma();
+  const quando = !ini ? 'A semana 1 começa no primeiro treino que você concluir.'
+    : semana < 1 ? `O programa começa em ${fmtDiaMes(ini)}.` : `Agora é a semana ${semana}.`;
+  return `<div class="panel">
+    <div class="programa-campos">
+      <label class="fld"><span>Programa</span><input class="field" data-f="g-nome" value="${esc(S.programa.nome)}" placeholder="Ex.: Programa de 5 dias" maxlength="40"></label>
+      <label class="fld"><span>Início da semana 1</span><input class="field" type="date" data-f="g-inicio" value="${ini ? dataISO(ini) : ''}"></label>
+    </div>
+    <p class="small muted">${quando} Nos exercícios com F, a última série de trabalho vai até a falha a partir da semana ${SEMANA_FALHA}.</p>
+  </div>`;
+}
+
+// Programas salvos: cópias dos treinos para ver, voltar a usar ou apagar
+function programasHTML() {
+  const lista = S.programas.map(p => {
+    const pid = esc(p.id), aberto = ui.progAberto.has(p.id);
+    const nEx = p.treinos.reduce((a, t) => a + t.exercicios.filter(forcaNomeada).length, 0);
+    return `<article class="hist">
+      <button class="hist-head" data-act="prog-ver" data-id="${pid}" aria-expanded="${aberto}">
+        <span class="hist-main"><b>${esc(p.nome || 'Programa')}</b><span class="small muted">Salvo em ${fmtDiaMes(p.salvo)}</span></span>
+        <span class="hist-stats"><span><b>${p.treinos.length}</b>${p.treinos.length === 1 ? 'treino' : 'treinos'}</span><span><b>${nEx}</b>${nEx === 1 ? 'exercício' : 'exercícios'}</span></span>
+        <span class="chev">${icon('chev', 18)}</span>
+      </button>
+      ${aberto ? `<div class="hist-body">
+        <label class="fld"><span>Nome</span><input class="field" data-f="k-nome" data-id="${pid}" value="${esc(p.nome)}" placeholder="Programa" maxlength="40"></label>
+        ${p.treinos.map(t => { const pares = paresBiset(t.exercicios); return `<div class="hist-ex"><h3>${esc(t.nome || 'Sem nome')} <span class="small muted">${diasTxt(t.dias)}</span></h3>
+          <ul class="tc-ex">${t.exercicios.filter(nomeado).map(e => linhaResumo(e, pares.get(e))).join('') || '<li class="muted">Sem exercícios</li>'}</ul></div>`; }).join('')}
+        <div class="actions"><button class="btn primary small" data-act="prog-usar" data-id="${pid}">Usar este programa</button><button class="btn small text-danger" data-act="prog-apagar" data-id="${pid}">${icon('lixo', 16)} Apagar</button></div>
+      </div>` : ''}
+    </article>`;
+  }).join('');
+  return `<h2 class="section-title">Programas salvos</h2>
+    <div class="panel backup">
+      <div><p class="small muted">Cópias dos seus treinos, para ver ou voltar a usar quando quiser. O histórico não muda.</p></div>
+      <div class="backup-actions"><button class="btn ghost small" data-act="prog-salvar">Salvar uma cópia do programa atual</button></div>
+    </div>
+    ${lista}`;
+}
+
 function cardEditor(t) {
-  const tid = esc(t.id);
+  const tid = esc(t.id), pares = paresBiset(t.exercicios);
   return `<article class="panel" data-treino="${tid}">
     <div class="ec-head">
       <label class="fld"><span>Nome do treino</span><input class="field" data-f="t-nome" data-t="${tid}" value="${esc(t.nome)}" placeholder="Ex.: Push A" maxlength="40"></label>
@@ -981,7 +1262,7 @@ function cardEditor(t) {
     <div class="fld"><span id="dias-${tid}">Dias da semana</span>
       <div class="days" role="group" aria-labelledby="dias-${tid}">${SEMANA.map(d => `<button class="opt" data-act="dia" data-t="${tid}" data-d="${d}" aria-pressed="${t.dias.includes(d)}" aria-label="${DIAS_LONGO[d]}">${DIAS[d]}</button>`).join('')}</div>
     </div>
-    <div class="ex-edit-list">${t.exercicios.map(e => ehCardio(e) ? linhaCardio(tid, e) : linhaExercicio(tid, e)).join('')}</div>
+    <div class="ex-edit-list">${t.exercicios.map(e => ehCardio(e) ? linhaCardio(tid, e) : linhaExercicio(tid, e, pares.has(e))).join('')}</div>
     <div class="dupla">
       <button class="add-btn" data-act="add-ex" data-t="${tid}" aria-label="Adicionar exercício">+ Exercício</button>
       <button class="add-btn" data-act="add-cardio" data-t="${tid}" aria-label="Adicionar cardio">+ Cardio</button>
@@ -1001,14 +1282,24 @@ function linhaCardio(tid, e) {
   </div>`;
 }
 
-function linhaExercicio(tid, e) {
-  const eid = esc(e.id);
-  return `<div class="ex-edit">
-    <label class="fld name"><span>Exercício</span><input class="field" data-f="e-nome" data-t="${tid}" data-id="${eid}" value="${esc(e.nome)}" placeholder="Ex.: Supino reto" maxlength="60" list="nomes-exercicios" autocomplete="off"></label>
-    <label class="fld"><span>Séries</span><input class="field num" inputmode="numeric" data-f="e-series" data-t="${tid}" data-id="${eid}" value="${e.series}"></label>
-    <label class="fld"><span>Repetições</span><input class="field limpa" data-f="e-reps" data-t="${tid}" data-id="${eid}" value="${esc(e.reps)}" placeholder="Ex.: 12–15" maxlength="20"></label>
-    <button class="icon-btn prio" data-act="prio" data-t="${tid}" data-id="${eid}" aria-pressed="${e.prioridade}" aria-label="Prioridade: ${esc(e.nome || 'exercício')}" title="Marcar como prioridade">${icon('estrela')}</button>
-    <button class="icon-btn danger del" data-act="apagar-ex" data-t="${tid}" data-id="${eid}" aria-label="Remover ${esc(e.nome || 'exercício')}">${icon('x')}</button>
+// Exercício no editor: nome, séries de trabalho, repetições, prioridade e, embaixo, as séries A e P, o descanso
+// depois das séries T, a observação, o F e o bi-set com o próximo (emPar: faz parte de um bi-set)
+function linhaExercicio(tid, e, emPar) {
+  const eid = esc(e.id), alvo = `data-t="${tid}" data-id="${eid}"`, nome = esc(e.nome || 'exercício');
+  return `<div class="ex-edit${emPar ? ' em-par' : ''}">
+    <label class="fld name"><span>Exercício</span><input class="field" data-f="e-nome" ${alvo} value="${esc(e.nome)}" placeholder="Ex.: Supino reto" maxlength="60" list="nomes-exercicios" autocomplete="off"></label>
+    <label class="fld"><span>Séries</span><input class="field num" inputmode="numeric" data-f="e-series" ${alvo} value="${e.series}"></label>
+    <label class="fld"><span>Repetições</span><input class="field limpa" data-f="e-reps" ${alvo} value="${esc(e.reps)}" placeholder="Ex.: 12–15" maxlength="20"></label>
+    <button class="icon-btn prio" data-act="prio" ${alvo} aria-pressed="${e.prioridade}" aria-label="Prioridade: ${nome}" title="Marcar como prioridade">${icon('estrela')}</button>
+    <button class="icon-btn danger del" data-act="apagar-ex" ${alvo} aria-label="Remover ${nome}">${icon('x')}</button>
+    <div class="ex-mais">
+      <label class="fld plano"><span>Séries A e P</span><select class="field" data-f="e-preparo" ${alvo}>${Object.entries(PLANOS).map(([k, p]) =>
+        `<option value="${k}"${e.preparo === k ? ' selected' : ''}>${p.nome}</option>`).join('')}</select></label>
+      <label class="fld descanso"><span>Descanso T (s)</span><input class="field num" inputmode="numeric" maxlength="3" data-f="e-descanso" ${alvo} value="${e.descanso}"></label>
+      <label class="fld obs"><span>Observação</span><input class="field" data-f="e-obs" ${alvo} value="${esc(e.obs)}" placeholder="Ex.: cotovelo alto" maxlength="100"></label>
+      <button class="icon-btn marca falha num" data-act="falha" ${alvo} aria-pressed="${e.falha}" aria-label="F, última série até a falha: ${nome}" title="F: a última série de trabalho vai até a falha (da semana ${SEMANA_FALHA} em diante)">F</button>
+      <button class="icon-btn marca biset" data-act="biset" ${alvo} aria-pressed="${e.biset}" aria-label="Bi-set com o próximo exercício: ${nome}" title="Bi-set com o próximo exercício">${icon('biset')}</button>
+    </div>
   </div>`;
 }
 
@@ -1023,8 +1314,8 @@ function kcalDoRegistro(h) {
 // Séries de um exercício num registro; o título é o nome dele (no histórico) ou o dia (na Biblioteca)
 const MARCA_MAIS = `<span class="mais-hist" role="img" aria-label="ainda dava para fazer muito mais" title="Ainda dava para fazer muito mais">${icon('mais', 15)}</span>`;
 function histForca(e, titulo = esc(nomeItem(exPorId(e.exId) || e))) {
-  return `<div class="hist-ex"><h3>${titulo}</h3><ol class="hist-sets">${e.series.map((s, i) => `
-    <li><span class="muted">${i + 1}</span><span>${comUnidade(s.peso, 'kg')}</span><span>${comUnidade(s.reps, 'reps')}</span><span class="muted">${vazio(s.rir) ? '' : 'RIR ' + s.rir}${s.mais ? MARCA_MAIS : ''}</span></li>`).join('')}
+  return `<div class="hist-ex"><h3>${titulo}</h3><ol class="hist-sets">${e.series.map(s => `
+    <li${s.tipo ? ' class="preparo"' : ''}><span class="muted" title="${NOME_TIPO[tipoSerie(s)]}">${tipoSerie(s)}</span><span>${comUnidade(s.peso, 'kg')}</span><span>${comUnidade(s.reps, 'reps')}</span><span class="muted">${vazio(s.rir) ? '' : 'RIR ' + s.rir}${s.mais ? MARCA_MAIS : ''}</span></li>`).join('')}
   </ol></div>`;
 }
 
@@ -1128,7 +1419,7 @@ function diasDoExercicio(ex) {
   for (const h of S.historico) {
     const entradas = h.exercicios.filter(e => e.exId === ex.id);
     if (!entradas.length) continue;
-    const series = entradas.flatMap(e => e.series);
+    const series = entradas.flatMap(e => e.series).filter(ehTrabalho); // musculação: só as séries de trabalho
     const conta = ehCardio(ex) && contaCardio(entradas[0], series, corpoDe(entradas[0]));
     dias.push({ t: h.inicio, treino: h.nome, entradas, base: conta ? (conta.n ? conta : null) : series });
   }
@@ -1163,6 +1454,9 @@ function viewExercicio(ex) {
       <div class="ex-titulo">
         ${cardio ? `<h1>${esc(nomeItem(ex))}</h1>` : `<input class="titulo-edit" id="ex-nome" value="${esc(ex.nome)}" maxlength="60" autocomplete="off" aria-label="Nome do exercício (toque para renomear)">`}
         <p class="small muted">${esc(textoSituacao(situacao))}</p>
+        ${cardio ? '' : `<label class="grupo-ex"><span>Grupo muscular</span><select class="field" id="ex-grupo">${Object.entries(GRUPOS).map(([k, nome]) =>
+          `<option value="${k}"${ex.grupo === k ? ' selected' : ''}>${nome}</option>`).join('')}</select></label>
+        <p class="small muted">Com as séries A e P em Automático, o primeiro exercício de cada grupo no dia recebe o aquecimento (A).</p>`}
       </div>
       <div class="actions">
         <button class="btn ghost small" data-act="lib-exportar" data-id="${id}">${icon('baixar', 18)} Exportar dados</button>
@@ -1206,9 +1500,6 @@ function viewAjustes() {
 const PERIODOS = [['max', 'Máx'], ['12', '12M'], ['6', '6M'], ['3', '3M'], ['1', '1M']];
 const NIVEIS = ['Sem treino', 'Até 49%', '50–74%', '75–99%', '100%'];
 const TEXTO_PERIODO = { max: 'desde o primeiro treino', 12: 'nos últimos 12 meses', 6: 'nos últimos 6 meses', 3: 'nos últimos 3 meses', 1: 'no último mês' };
-const DIA_MS = 864e5;
-
-const inicioDoDia = ts => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d; };
 const somarDias = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 // Início do período de n meses até hoje, sem "pular" de mês (ex.: 31 de março − 1 mês = 28/29 de fevereiro)
 function mesesAtras(n) {
@@ -1507,35 +1798,115 @@ function desenharLinhas(box, cfg) {
 
 /* ---------- Janela do exercício ---------- */
 // Valor sugerido (aparece apagado no campo e entra ao marcar como feita)
-// De onde vem: a mesma série (ou trecho) da última vez (série 2 mostra o peso da série 2 do treino anterior);
-// se ela não existia, a linha anterior de hoje; por fim, a última linha da última vez
+// Séries de trabalho (e trechos de cardio): a mesma série da última vez (a 2ª série T mostra o peso da 2ª série T
+// do treino anterior); se ela não existia, a série anterior de hoje; por fim, a última da última vez.
+// Aquecimento e preparação: a porcentagem da carga de trabalho de hoje (sugestaoPreparo).
 function sugestao(e, anteriores, i) {
-  const fontes = [anteriores[i], e.sets[i - 1], anteriores[anteriores.length - 1]];
-  const pegar = (k, padrao) => fontes.find(f => !vazio(f?.[k]))?.[k] ?? padrao;
-  return Object.fromEntries(camposDe(e).map(k => [k, pegar(k, k === 'reps' ? repsAlvo(e.reps) : CAMPOS[k].padrao ?? '')]));
+  const s = e.sets[i];
+  if (s?.tipo) return sugestaoPreparo(e, anteriores, s);
+  const hoje = e.sets.filter(ehTrabalho), antes = anteriores.filter(ehTrabalho);
+  const k = s ? hoje.indexOf(s) : hoje.length; // sem s: a linha que ainda vai entrar no fim
+  const fontes = [antes[k], hoje[k - 1], antes[antes.length - 1]];
+  const pegar = (c, padrao) => fontes.find(f => !vazio(f?.[c]))?.[c] ?? padrao;
+  const r = Object.fromEntries(camposDe(e).map(c => [c, pegar(c, c === 'reps' ? repsAlvo(e.reps) : CAMPOS[c].padrao ?? '')]));
+  if (s && s === serieAteFalha(e)) r.rir = 0; // F: até a falha
+  return r;
+}
+// Carga de trabalho de hoje: o peso da 1ª série T (o digitado ou o sugerido, que vem da última vez)
+function cargaDeTrabalho(e, anteriores) {
+  const i = e.sets.findIndex(ehTrabalho);
+  const peso = i < 0 ? '' : vazio(e.sets[i].peso) ? sugestao(e, anteriores, i).peso : e.sets[i].peso;
+  return typeof peso === 'number' && peso > 0 ? peso : null;
+}
+// A e P: peso = % da carga de trabalho, de 5 em 5 kg (mínimo 5, sem passar da própria carga de trabalho);
+// repetições = as da última vez nessa mesma série
+function sugestaoPreparo(e, anteriores, s, base = cargaDeTrabalho(e, anteriores)) {
+  const antes = anteriores.find(x => x.tipo === s.tipo && x.pct === s.pct);
+  return { peso: base ? Math.min(base, de5em5(base * s.pct / 100)) : '', reps: antes?.reps ?? REPS_PREPARO[s.pct] ?? '', rir: '' };
+}
+
+// Antes das séries de trabalho entram as de aquecimento e preparação escolhidas no treino. Em Automático, pela ordem
+// do exercício no grupo muscular de hoje (conta quem já tem série feita, então vale a ordem em que você faz).
+// Refaz enquanto o exercício não foi começado: nenhuma série marcada e nenhuma série A ou P preenchida.
+const grupoNaSessao = e => { const g = exPorId(e.exId)?.grupo; return g && g !== 'outro' ? g : `ex:${e.exId}`; };
+function jaFeitosDoGrupo(e) {
+  const grupo = grupoNaSessao(e);
+  return S.sessao.exercicios.filter(x => x !== e && !ehCardio(x) && grupoNaSessao(x) === grupo && x.sets.some(s => s.feita)).length;
+}
+// Devolve true se as séries mudaram
+function planejarPreparo(e) {
+  if (ehCardio(e) || e.sets.some(s => s.feita || (s.tipo && (!vazio(s.peso) || !vazio(s.reps))))) return false;
+  const plano = PLANOS[e.preparo || PREPARO[Math.min(jaFeitosDoGrupo(e), PREPARO.length - 1)]].series, atual = e.sets.filter(s => s.tipo);
+  if (plano.length === atual.length && plano.every(([tipo, pct], i) => atual[i].tipo === tipo && atual[i].pct === pct)) return false;
+  e.sets = [...plano.map(([tipo, pct]) => ({ ...novaLinha(e, 0), tipo, pct })), ...trabalho(e)];
+  return true;
+}
+
+// Nome da linha para leitores de tela: "série de aquecimento", "série de preparação 2", "série de trabalho 3", "trecho 1"
+function nomeLinha(e, i, falha = serieAteFalha(e)) {
+  if (ehCardio(e)) return `trecho ${i + 1}`;
+  const s = e.sets[i], mesmas = e.sets.filter(x => tipoSerie(x) === tipoSerie(s));
+  return `série de ${NOME_TIPO[tipoSerie(s)].toLowerCase()}${mesmas.length > 1 ? ` ${mesmas.indexOf(s) + 1}` : ''}${s === falha ? ', até a falha' : ''}`;
 }
 
 // Séries (musculação) ou trechos (cardio) da janela aberta, com os botões de pôr e tirar.
-// No cardio, cada trecho tem um espaço para a conta, preenchido por atualizarCalc
-function linhasHTML(e, anteriores = ultimasSeries(e.exId)) {
-  const campos = camposDe(e), t = tipoDe(e), colunas = `style="--n:${campos.length}"`;
+// Na musculação, cada série mostra a letra do tipo (A, P ou T) e, embaixo, o descanso depois dela, que dá para mudar
+// (no 1º exercício de um bi-set, a série de trabalho não tem descanso: vem o outro exercício). A última série de
+// trabalho de um exercício com F leva um F ao lado do T, da semana 3 em diante. b: o par do bi-set.
+// No cardio, cada trecho tem um espaço para a conta, preenchido por atualizarCalc.
+function linhasHTML(e, anteriores = ultimasSeries(e.exId), b = parDoBiset(e)) {
+  const falha = serieAteFalha(e);
+  const nomes = e.sets.map((_, i) => nomeLinha(e, i, falha)); // para leitores de tela
+  const campos = camposDe(e), t = tipoDe(e), cardio = ehCardio(e), colunas = `style="--n:${campos.length}${cardio ? '' : ';--c1:50px'}"`;
   const campo = (s, i, ph) => k => {
-    const c = CAMPOS[k], alvo = `data-f="s-${k}" data-i="${i}" aria-label="${c.aria}, ${t.linha} ${i + 1}"`;
+    const c = CAMPOS[k], alvo = `data-f="s-${k}" data-i="${i}" aria-label="${c.aria}, ${nomes[i]}"`;
     if (c.opcoes) return `<select class="field" ${alvo}>${Object.entries(c.opcoes).map(([v, o]) => `<option value="${v}"${s[k] === v ? ' selected' : ''}>${o.nome}</option>`).join('')}</select>`;
+    if (s.tipo && k === 'rir') return '<span></span>'; // aquecimento e preparação ficam longe da falha: sem RIR
     const entrada = `<input class="field num" inputmode="${c.decimal ? 'decimal' : 'numeric'}" ${alvo} value="${mostrarCampo(k, s[k])}" placeholder="${mostrarCampo(k, ph[k]) || '–'}">`;
     return !c.marca ? entrada : `<span class="com-marca">${entrada}<button class="marca-mais" data-act="mais" data-i="${i}" aria-pressed="${!!s.mais}"
-      aria-label="Série ${i + 1}: ainda dava para fazer muito mais" title="Ainda dava para fazer muito mais">${icon('mais', 16)}</button></span>`;
+      aria-label="${cap(nomes[i])}: ainda dava para fazer muito mais" title="Ainda dava para fazer muito mais">${icon('mais', 16)}</button></span>`;
+  };
+  const lado = (s, i) => {
+    if (cardio) return `<span class="set-n num">${i + 1}</span>`;
+    const tipo = tipoSerie(s), seg = descansoApos(e, s, b), ateFalha = s === falha;
+    const desc = seg
+      ? `<label class="desc" title="Descanso depois desta série">${icon('historico', 11)}<input class="num" inputmode="numeric" maxlength="3" data-f="r-${tipo}" value="${seg}" placeholder="${seg}" aria-label="Descanso depois da ${nomes[i]}, em segundos">s</label>`
+      : `<span class="desc" title="Sem descanso: depois desta série vem ${esc(nomeItem(b.par))}">bi-set</span>`;
+    return `<span class="set-lado">
+        <span class="set-tipo num" title="${ateFalha ? 'Trabalho até a falha' : NOME_TIPO[tipo]}${s.tipo ? `: ${s.pct}% da carga de trabalho` : ''}">${tipo}${ateFalha ? '<span class="f">F</span>' : ''}</span>
+        ${desc}
+      </span>`;
   };
   return `<div class="set-grid sets-head" ${colunas} aria-hidden="true"><span>${cap(t.linha)}</span>${campos.map(k => `<span>${CAMPOS[k].rotulo}</span>`).join('')}<span></span></div>` +
-    e.sets.map((s, i) => `<div class="set-grid set-row${s.feita ? ' done' : ''}" ${colunas}>
-        <span class="set-n num">${i + 1}</span>${campos.map(campo(s, i, sugestao(e, anteriores, i))).join('')}
-        <button class="check" data-act="serie-feita" data-i="${i}" aria-pressed="${s.feita}" aria-label="${cap(t.linha)} ${i + 1} ${t.feita}">${icon('check')}</button>
-        ${ehCardio(e) ? `<div class="trecho-calc" data-tc="${i}"></div>` : ''}
+    e.sets.map((s, i) => `<div class="set-grid set-row${s.feita ? ' done' : ''}${s.tipo ? ' preparo' : ''}${s === falha ? ' falha' : ''}" ${colunas}>
+        ${lado(s, i)}${campos.map(campo(s, i, sugestao(e, anteriores, i))).join('')}
+        <button class="check" data-act="serie-feita" data-i="${i}" aria-pressed="${s.feita}" aria-label="${cap(nomes[i])} ${t.feita}">${icon('check')}</button>
+        ${cardio ? `<div class="trecho-calc" data-tc="${i}"></div>` : ''}
       </div>`).join('') +
     `<div class="dupla">
-      <button class="add-btn" data-act="remover-serie"${e.sets.length > 1 ? '' : ' disabled'}>− Remover ${t.linha}</button>
+      <button class="add-btn" data-act="remover-serie"${trabalho(e).length > 1 ? '' : ' disabled'}>− Remover ${t.linha}</button>
       <button class="add-btn" data-act="add-serie">+ Adicionar ${t.linha}</button>
     </div>`;
+}
+// O peso cinza das séries A e P acompanha o peso digitado na 1ª série de trabalho (sem redesenhar os campos)
+function atualizarPreparo(i) {
+  const e = exAberto();
+  if (!e || ehCardio(e) || e.sets.findIndex(ehTrabalho) !== i) return;
+  const anteriores = ultimasSeries(e.exId), base = cargaDeTrabalho(e, anteriores);
+  e.sets.forEach((s, j) => {
+    const campo = s.tipo && $(`#sets [data-f="s-peso"][data-i="${j}"]`);
+    if (campo) campo.placeholder = mostrarCampo('peso', sugestaoPreparo(e, anteriores, s, base).peso) || '–';
+  });
+}
+// Muda o descanso de um tipo de série no exercício aberto e no treino (vale para os próximos treinos)
+// e mostra o novo valor em todas as séries desse tipo, menos no campo onde a pessoa está digitando
+function guardarDescanso(e, tipo, segundos, digitando) {
+  const k = CAMPO_DESCANSO[tipo];
+  e[k] = clampInt(segundos, 5, 600, e[k]);
+  const original = exDoTreino(S.sessao.treinoId, e.id);
+  if (original) original[k] = e[k];
+  document.querySelectorAll(`#sets [data-f="r-${tipo}"]`).forEach(x => { if (x !== digitando) x.value = e[k]; });
+  salvar();
 }
 
 /* ---------- Calculadora do cardio ---------- */
@@ -1588,12 +1959,34 @@ function timerHTML() {
   </div>`;
 }
 
+// O que cada letra quer dizer, embaixo das séries de musculação (o F, só nos exercícios que têm)
+const legendaSeries = e => `<dl class="legenda-series">
+  <div><dt>A</dt><dd>Aquecimento: 40% da carga de trabalho, 10 a 15 repetições, bem longe da falha.</dd></div>
+  <div><dt>P</dt><dd>Preparação: com duas, 60% (8 a 10 repetições) e depois 80% (3 a 5); com uma, 80% (4 a 6). Longe da falha.</dd></div>
+  <div><dt>T</dt><dd>Trabalho: carga cheia, na faixa da meta, parando com 1 ou 2 repetições sobrando. Só estas contam nos gráficos.</dd></div>
+  ${e.falha ? `<div><dt>F</dt><dd>A última série de trabalho vai até a falha, da semana ${SEMANA_FALHA} do programa em diante.</dd></div>` : ''}
+</dl>`;
+
+// Lembretes do exercício no topo da janela: o bi-set, o F (conforme a semana do programa) e a observação do treino
+function notasEx(e, b = parDoBiset(e)) {
+  const semana = semanaDoPrograma(), nome = b && nomeItem(b.par);
+  const notas = [
+    b && (b.primeiro ? `Bi-set com ${nome}: marcou uma série de trabalho, o app abre o outro, sem descanso.`
+      : `Bi-set com ${nome}: o descanso do par vem depois desta, e o app volta para o outro.`),
+    e.falha && (semana >= SEMANA_FALHA ? 'F: a última série de trabalho vai até a falha.'
+      : `F a partir da semana ${SEMANA_FALHA}. Agora é a semana ${Math.max(1, semana)}: pare com 1 ou 2 repetições sobrando.`),
+    e.obs,
+  ].filter(Boolean);
+  return notas.length ? `<ul class="notas-ex">${notas.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : '';
+}
+
 function abrirEx(id) {
   const e = exSessao(id);
   if (!e) return;
   ui.exAberto = id;
-  const cardio = ehCardio(e);
-  const sub = cardio ? (e.meta ? `Meta: ${metaTxt(e)}` : 'Cardio') : `Meta: ${metaTxt(e)} ${tagPrioridade(e)}`;
+  const cardio = ehCardio(e), b = parDoBiset(e);
+  if (!cardio && planejarPreparo(e)) salvar();
+  const sub = cardio ? (e.meta ? `Meta: ${metaTxt(e)}` : 'Cardio') : `Meta: ${metaTxt(e)} ${tagsEx(e, b)}`;
   $('#sheet-root').innerHTML = `<div class="sheet-wrap">
     <div class="sheet-backdrop" data-act="fechar-ex"></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
@@ -1603,9 +1996,10 @@ function abrirEx(id) {
       </header>
       <div class="sheet-body">
         <div class="sets-col">
-          ${cardio ? '' : avisoMais(e)}
-          <div id="sets" class="sets">${linhasHTML(e)}</div>
-          <p class="hint">${cardio ? APARELHOS[e.aparelho].dica : `RIR: quantas repetições ainda daria para fazer antes da falha. Toque em ${icon('mais', 14)} quando ainda dava para fazer muito mais: é o sinal para subir a carga.`}</p>
+          ${cardio ? '' : notasEx(e, b) + avisoMais(e)}
+          <div id="sets" class="sets">${linhasHTML(e, undefined, b)}</div>
+          ${cardio ? '' : legendaSeries(e)}
+          <p class="hint">${cardio ? APARELHOS[e.aparelho].dica : `Os pesos em cinza já vêm calculados. Embaixo de cada letra fica o descanso depois da série, em segundos: toque para mudar. RIR: quantas repetições ainda daria para fazer antes da falha. Toque em ${icon('mais', 14)} quando ainda dava para fazer muito mais: é o sinal para subir a carga.`}</p>
         </div>
         ${cardio ? `<div class="calc-col"><div class="calc" id="calc"></div>${corpoHTML(e.aparelho)}</div>` : timerHTML()}
       </div>
@@ -1632,16 +2026,19 @@ function marcarSerie(i) {
   const s = e?.sets[i];
   if (!s) return;
   const anteriores = ultimasSeries(e.exId);
-  if (!s.feita) {
-    const ph = sugestao(e, anteriores, i);
-    for (const k in ph) if (vazio(s[k]) && !vazio(ph[k])) s[k] = ph[k];
-    s.feita = true;
-    if (e.descanso) iniciarDescanso(e); // só a musculação tem descanso entre séries
-  } else {
-    s.feita = false;
-  }
+  if (s.feita) { s.feita = false; salvar(); return redesenharSeries(anteriores); }
+  const ph = sugestao(e, anteriores, i);
+  for (const k in ph) if (vazio(s[k]) && !vazio(ph[k])) s[k] = ph[k];
+  s.feita = true;
   salvar();
-  redesenharSeries(anteriores);
+  if (ehCardio(e)) return redesenharSeries(anteriores); // só a musculação tem descanso
+  // Bi-set: depois de uma série de trabalho, vai para o outro exercício do par, se ele ainda tem série de trabalho
+  // por fazer. Do 1º para o 2º não tem descanso; depois do 2º vem o descanso do par.
+  const b = parDoBiset(e), vai = ehTrabalho(s) && vaiParaOPar(b);
+  iniciarDescanso(e, descansoApos(e, s, b));
+  if (!vai) return redesenharSeries(anteriores);
+  abrirEx(b.par.id);
+  toast(b.primeiro ? `Bi-set: agora ${nomeItem(b.par)}` : `Descanso do bi-set. Depois, ${nomeItem(b.par)}`);
 }
 
 // "Ainda dava para fazer muito mais": junto com o peso, é o sinal para subir a carga no próximo treino
@@ -1670,10 +2067,10 @@ function adicionarSerie() {
   redesenharSeries(anteriores);
 }
 
-// Tira a última série ou trecho (sempre fica pelo menos um); o aviso permite desfazer
+// Tira a última série ou trecho (sempre fica pelo menos um trecho ou uma série de trabalho); o aviso permite desfazer
 function removerSerie() {
   const e = exAberto();
-  if (!e || e.sets.length <= 1) return;
+  if (!e || trabalho(e).length <= 1) return;
   const t = tipoDe(e);
   comDesfazer(`${cap(t.linha)} ${e.sets.length} ${t.removida}`, () => e.sets.pop(), redesenharSeries);
 }
@@ -1713,8 +2110,11 @@ function restoAtual() {
   if (T.state === 'running') return Math.max(0, (T.endAt - Date.now()) / 1000);
   if (T.state === 'paused') return T.restante;
   if (T.state === 'done') return 0;
-  return exAberto()?.descanso ?? DESCANSO_PADRAO;
+  const e = exAberto();
+  return e?.sets.length && !ehCardio(e) ? descansoApos(e, serieDoDescanso(e)) : DESCANSO_PADRAO;
 }
+// Série cujo descanso vale agora: a última marcada como feita (ou a primeira, se nenhuma foi feita)
+const serieDoDescanso = e => [...e.sets].reverse().find(s => s.feita) || e.sets[0];
 
 // Único ponto que muda o estado do cronômetro: liga ou desliga o relógio e redesenha
 function definirTimer(state, campos = {}) {
@@ -1724,9 +2124,11 @@ function definirTimer(state, campos = {}) {
   atualizarTimerUI();
 }
 
-function iniciarDescanso(e) {
+// Sem descanso (0, no bi-set), o cronômetro fica parado
+function iniciarDescanso(e, segundos = descansoApos(e, serieDoDescanso(e))) {
+  if (!(segundos > 0)) return zerar();
   desbloquearAudio();
-  definirTimer('running', { exId: e.id, total: e.descanso, endAt: Date.now() + e.descanso * 1000 });
+  definirTimer('running', { exId: e.id, total: segundos, endAt: Date.now() + segundos * 1000 });
 }
 
 function tick() {
@@ -1757,11 +2159,9 @@ function ajustarDescanso(d) {
     else if (T.state === 'running') definirTimer('running', { total, endAt: Date.now() + r * 1000 });
     else definirTimer('paused', { total, restante: r });
   } else if (e) {
-    // Parado: muda o tempo de descanso deste exercício e guarda no treino
-    e.descanso = clampInt(e.descanso + d, 5, 600, DESCANSO_PADRAO);
-    const original = exDoTreino(S.sessao.treinoId, e.id);
-    if (original) original.descanso = e.descanso;
-    salvar();
+    // Parado: muda o descanso do tipo da série da vez (A, P ou T) neste exercício e guarda no treino
+    const tipo = tipoSerie(serieDoDescanso(e));
+    guardarDescanso(e, tipo, descansoDe(e, serieDoDescanso(e)) + d);
     definirTimer('idle');
   }
 }
@@ -1817,14 +2217,15 @@ function iniciarTreino(id) {
   if (!t) return;
   const itens = t.exercicios.filter(nomeado);
   if (!itens.length) { toast('Dê nome a pelo menos um exercício deste treino.'); return; }
+  const achar = indiceBiblioteca(S);
   S.sessao = {
     treinoId: t.id, nome: t.nome.trim() || 'Treino', inicio: Date.now(),
-    // exId: o exercício da Biblioteca, que guarda os dados de todos os treinos em que ele aparece
-    exercicios: itens.map(e => ehCardio(e)
-      ? { id: e.id, exId: exercicioDe(S, e).id, tipo: 'cardio', aparelho: e.aparelho, meta: e.meta, feito: false, sets: [] }
-      : { id: e.id, exId: exercicioDe(S, e).id, nome: e.nome.trim(), series: e.series, reps: e.reps, descanso: e.descanso || DESCANSO_PADRAO, prioridade: e.prioridade, feito: false, sets: [] }),
+    // Uma cópia de cada item do treino (meta, descansos, séries A e P, F, bi-set e observação), mais exId:
+    // o exercício da Biblioteca, que guarda os dados de todos os treinos em que ele aparece
+    exercicios: itens.map(e => ({ ...e, ...(!ehCardio(e) && { nome: e.nome.trim() }), exId: achar(e).id, feito: false, sets: [] })),
   };
-  // Musculação começa com as séries do plano; o cardio, com tantos trechos quanto da última vez (no mínimo um)
+  // Musculação começa com as séries de trabalho do plano (as de aquecimento e preparação entram ao abrir o exercício);
+  // o cardio, com tantos trechos quanto da última vez (no mínimo um)
   for (const e of S.sessao.exercicios) {
     const anteriores = ultimasSeries(e.exId);
     const n = ehCardio(e) ? Math.max(1, anteriores.length) : e.series;
@@ -1843,9 +2244,9 @@ async function concluirTreino() {
     return ehCardio(e)
       ? { exId: e.exId, tipo: 'cardio', aparelho: e.aparelho, meta: e.meta, series, corpo: { ...S.perfil } }
       : { exId: e.exId, nome: e.nome, metaSeries: e.series, metaReps: e.reps, series };
-  }).filter(e => e.series.length);
+  }).filter(e => e.series.some(ehTrabalho)); // só aquecimento e preparação não vira registro
   if (!exs.length) {
-    const ok = await confirmar({ titulo: 'Nada registrado', texto: 'Para salvar o treino, marque pelo menos uma série ou um trecho de cardio como feito. Quer descartar este treino?', ok: 'Descartar treino', perigo: true });
+    const ok = await confirmar({ titulo: 'Nada registrado', texto: 'Para salvar o treino, marque pelo menos uma série de trabalho (T) ou um trecho de cardio como feito. Quer descartar este treino?', ok: 'Descartar treino', perigo: true });
     if (ok) comDesfazer('Treino descartado', () => { S.sessao = null; zerar(); });
     return;
   }
@@ -1857,6 +2258,8 @@ async function concluirTreino() {
   const planejadas = s.exercicios.reduce((a, e) => a + (ehCardio(e) ? 0 : e.series), 0);
   const cardioPlanejados = s.exercicios.filter(ehCardio).length;
   S.historico.unshift({ id: uid(), treinoId: s.treinoId, nome: s.nome, inicio: s.inicio, fim: Date.now(), planejadas, cardioPlanejados, exercicios: exs });
+  // O primeiro treino de musculação do programa em uso (não um começado antes da troca, nem só de cardio) abre a semana 1
+  if (!S.programa.inicio && treinoPorId(s.treinoId) && exs.some(e => !ehCardio(e))) S.programa.inicio = +inicioDoDia(s.inicio);
   S.sessao = null;
   zerar();
   salvarAgora();
@@ -1903,6 +2306,30 @@ function escolherAparelho(tid, id, aparelho, botao) {
   salvar();
 }
 
+// Programas salvos: voltar a usar (os treinos de agora ficam salvos no lugar) e apagar
+async function usarPrograma(id) {
+  const p = programaPorId(id);
+  if (!p) return;
+  const ok = await confirmar({
+    titulo: `Usar ${p.nome || 'este programa'}?`,
+    texto: 'Os treinos de agora vão para Programas salvos, e os deste programa entram no lugar. O histórico não muda.',
+    ok: 'Usar este programa',
+  });
+  if (!ok) return;
+  comDesfazer(`${p.nome || 'Programa'} em uso`, () => {
+    const antes = S.treinos;
+    guardarPrograma(S);
+    S.programas = S.programas.filter(x => x !== p);
+    S.treinos = p.treinos;
+    S.programa = { nome: p.nome, inicio: p.inicio };
+    arquivarQueSaiu(S, antes);
+  });
+}
+function apagarPrograma(id) {
+  const p = programaPorId(id);
+  if (p) comDesfazer(`${p.nome || 'Programa'} apagado`, () => { S.programas = S.programas.filter(x => x !== p); });
+}
+
 function alternarDia(tid, d, botao) {
   const t = treinoPorId(tid);
   if (!t) return;
@@ -1932,6 +2359,10 @@ function exportar() {
 // Texto dos diálogos de importar e de restaurar ("de" diz de onde vêm os dados)
 const trocaDados = (de, d) => `Os treinos e o histórico deste aparelho serão trocados pelos ${de}: ${plural(d.treinos.length, 'treino', 'treinos')} e ${plural(d.historico.length, 'registro', 'registros')}.`;
 
+// Backup de antes do programa novo: ao abrir, ele entra no lugar dos treinos do backup, que vão para Programas salvos
+const avisoPrograma = (bruto, d) => antesDoPrograma(bruto) && d.programas.length ? '. Os treinos dele estão em Programas salvos, e entrou o programa novo' : '';
+const avisoNoDialogo = bruto => antesDoPrograma(bruto) ? ' Ele é de antes do programa novo: os treinos dele vão para Programas salvos, e o programa novo entra no lugar.' : '';
+
 // Troca os dados deste aparelho pelos de um backup (arquivo ou Drive), com "Desfazer"
 function aplicarBackup(d, msg) {
   if (ui.exAberto) fecharEx();
@@ -1941,7 +2372,7 @@ function aplicarBackup(d, msg) {
 
 /* ---------- Planilha CSV (para planilhas e para análise com IA) ---------- */
 // Uma linha por série ou trecho; colunas que não valem para o tipo ficam vazias. Números com ponto, como pede o CSV.
-const COLUNAS_CSV = ['data', 'hora', 'treino', 'exercicio', 'tipo', 'serie_ou_trecho', 'peso_kg', 'repeticoes', 'rir', 'dava_muito_mais',
+const COLUNAS_CSV = ['data', 'hora', 'treino', 'exercicio', 'grupo_muscular', 'tipo', 'serie_ou_trecho', 'tipo_serie', 'peso_kg', 'repeticoes', 'rir', 'dava_muito_mais',
   'distancia_km', 'tempo_min', 'inclinacao_pct', 'degraus', 'esforco', 'velocidade_kmh', 'ritmo_min_por_km', 'degraus_por_min',
   'kcal_estimadas', 'peso_corporal_kg'];
 const arred2 = v => Math.round(v * 100) / 100; // duas casas, no CSV e na planilha do Drive
@@ -1958,9 +2389,10 @@ function linhasCSV(exId) {
   for (const h of registros.sort((a, b) => a.inicio - b.inicio)) for (const e of h.exercicios) {
     if (exId && e.exId !== exId) continue;
     // exId não vai para o CSV: serve para separar as abas da planilha do Drive
-    const base = { exId: e.exId, data: dataISO(h.inicio), hora: fmtHora(h.inicio), treino: h.nome, exercicio: nomeItem(porId.get(e.exId) || e), tipo: ehCardio(e) ? 'cardio' : 'musculacao' };
+    const base = { exId: e.exId, data: dataISO(h.inicio), hora: fmtHora(h.inicio), treino: h.nome, exercicio: nomeItem(porId.get(e.exId) || e), grupo_muscular: ehCardio(e) ? '' : GRUPOS[porId.get(e.exId)?.grupo] ?? '', tipo: ehCardio(e) ? 'cardio' : 'musculacao' };
     if (!ehCardio(e)) {
-      e.series.forEach((s, i) => linhas.push({ ...base, serie_ou_trecho: i + 1, peso_kg: s.peso, repeticoes: s.reps, rir: s.rir, dava_muito_mais: s.mais ? 'sim' : '' }));
+      const n = { A: 0, P: 0, T: 0 }; // número da série dentro do tipo: trabalho 1, 2, 3 (como nos arquivos antigos)
+      e.series.forEach(s => linhas.push({ ...base, serie_ou_trecho: ++n[tipoSerie(s)], tipo_serie: NOME_TIPO[tipoSerie(s)].toLowerCase(), peso_kg: s.peso, repeticoes: s.reps, rir: s.rir, dava_muito_mais: s.mais ? 'sim' : '' }));
       continue;
     }
     const corpo = corpoDe(e), c = contaCardio(e, e.series, corpo);
@@ -2021,7 +2453,7 @@ const hashDados = () => hashTxt(JSON.stringify(dadosDrive()));
 // "hoje às 14:32", "ontem às 09:10", "em 18 Nov às 20:01"
 function quandoTxt(ts) {
   if (!Number.isFinite(ts)) return '';
-  const dias = Math.round((inicioDoDia(Date.now()) - inicioDoDia(ts)) / DIA_MS);
+  const dias = diasDesde(ts);
   return `${dias === 0 ? 'hoje' : dias === 1 ? 'ontem' : `em ${fmtDiaMes(ts)}`} às ${fmtHora(ts)}`;
 }
 const backupDe = (atualizado, aparelho) => [quandoTxt(Date.parse(atualizado)), aparelho && `no ${aparelho}`].filter(Boolean).join(' ');
@@ -2119,7 +2551,7 @@ async function fazerBackup({ manual = false, substituir = false, avisarErro = ma
    uma linha por série ou trecho. Só vão as abas que mudaram desde a última vez (o resumo de cada uma fica em DR.abas). */
 const ABA_INDICE = 'Exercícios';
 const TITULOS_PLANILHA = {
-  data: 'Data', hora: 'Hora', treino: 'Treino', serie_ou_trecho: 'Série', peso_kg: 'Peso (kg)', repeticoes: 'Repetições', rir: 'RIR',
+  data: 'Data', hora: 'Hora', treino: 'Treino', serie_ou_trecho: 'Série', tipo_serie: 'Tipo de série', peso_kg: 'Peso (kg)', repeticoes: 'Repetições', rir: 'RIR',
   dava_muito_mais: 'Dava muito mais', distancia_km: 'Distância (km)', tempo_min: 'Tempo (min)', inclinacao_pct: 'Inclinação (%)',
   degraus: 'Degraus', esforco: 'Esforço', velocidade_kmh: 'Velocidade (km/h)', ritmo_min_por_km: 'Ritmo (min/km)',
   degraus_por_min: 'Degraus por min', kcal_estimadas: 'Kcal estimadas', peso_corporal_kg: 'Peso corporal (kg)',
@@ -2141,14 +2573,14 @@ function abasPlanilha() {
   };
   const porNome = (a, b) => nomeItem(a).localeCompare(nomeItem(b), 'pt-BR');
   const exs = [...S.biblioteca.filter(ex => !ehCardio(ex)).sort(porNome), ...S.biblioteca.filter(ehCardio).sort(porNome)];
-  const indice = { nome: ABA_INDICE, colunas: ['Exercício', 'Tipo', 'Situação', 'Treinos', 'Dias de treino', 'Último registro'], linhas: [] };
+  const indice = { nome: ABA_INDICE, colunas: ['Exercício', 'Tipo', 'Grupo muscular', 'Situação', 'Treinos', 'Dias de treino', 'Último registro'], linhas: [] };
   const abas = [indice];
   for (const ex of exs) {
     const s = situacao(ex), linhas = porEx.get(ex.id) || [];
-    indice.linhas.push([nomeItem(ex), ehCardio(ex) ? 'Cardio' : 'Musculação', SITUACAO_PLANILHA[s.situacao], s.treinos.join(', '), s.dias, s.ultimo ? dataISO(s.ultimo) : '']);
+    indice.linhas.push([nomeItem(ex), ehCardio(ex) ? 'Cardio' : 'Musculação', GRUPOS[ex.grupo] ?? '', SITUACAO_PLANILHA[s.situacao], s.treinos.join(', '), s.dias, s.ultimo ? dataISO(s.ultimo) : '']);
     if (!linhas.length) continue;
     // Data, hora, treino e série sempre; as outras colunas só se o exercício tem algum valor nelas
-    const cols = COLUNAS_CSV.filter(k => ['data', 'hora', 'treino', 'serie_ou_trecho'].includes(k) || (k !== 'exercicio' && k !== 'tipo' && linhas.some(l => !vazio(l[k]))));
+    const cols = COLUNAS_CSV.filter(k => ['data', 'hora', 'treino', 'serie_ou_trecho'].includes(k) || (!['exercicio', 'grupo_muscular', 'tipo'].includes(k) && linhas.some(l => !vazio(l[k]))));
     abas.push({
       nome: nomeAba(ex),
       colunas: cols.map(k => k === 'serie_ou_trecho' && ehCardio(ex) ? 'Trecho' : TITULOS_PLANILHA[k]),
@@ -2243,12 +2675,12 @@ async function restaurarDrive({ perguntar = true } = {}) {
   if (perguntar) {
     const ok = await confirmar({
       titulo: 'Restaurar o backup do Drive?',
-      texto: `${trocaDados(`do backup feito ${backupDe(r.atualizado, r.aparelho)}`, d)}${S.sessao ? ' O treino em andamento será descartado.' : ''}`,
+      texto: `${trocaDados(`do backup feito ${backupDe(r.atualizado, r.aparelho)}`, d)}${avisoNoDialogo(r.backup.dados)}${S.sessao ? ' O treino em andamento será descartado.' : ''}`,
       ok: 'Restaurar backup',
     });
     if (!ok || DR !== alvo) return;
   }
-  aplicarBackup(d, 'Backup do Drive restaurado');
+  aplicarBackup(d, `Backup do Drive restaurado${avisoPrograma(r.backup.dados, d)}`);
   emDia(r.atualizado, hashDados());
 }
 
@@ -2387,12 +2819,14 @@ async function renomearExercicio(id, texto) {
   comDesfazer(outro ? 'Exercícios juntados' : 'Nome alterado', () => trocarExercicio(ex, outro || nome), render, outro ? render : () => {});
 }
 
-// Troca o nome de um exercício (destino = texto) ou junta com outro (destino = exercício):
-// treinos com o nome antigo, a sessão e o histórico passam a apontar para o novo
+// Troca o nome de um exercício (destino = texto) ou junta com outro (destino = exercício): treinos (também os dos
+// Programas salvos) com o nome antigo, a sessão e o histórico passam a apontar para o novo
 function trocarExercicio(ex, destino) {
   const antes = chaveDe(ex);
+  // O grupo muscular acompanha o nome novo, se você não tinha escolhido outro
+  if (typeof destino === 'string' && ex.grupo === grupoPeloNome(ex.nome)) ex.grupo = grupoPeloNome(destino);
   const novo = typeof destino === 'string' ? Object.assign(ex, { nome: destino }) : destino;
-  for (const { e } of itensNomeados(S)) if (!ehCardio(e) && chaveDe(e) === antes) e.nome = novo.nome;
+  for (const { e } of itensNomeados(S, true)) if (!ehCardio(e) && chaveDe(e) === antes) e.nome = novo.nome;
   for (const e of [...S.historico.flatMap(h => h.exercicios), ...(S.sessao?.exercicios || [])]) {
     if (e.exId === ex.id) { e.exId = novo.id; e.nome = novo.nome; }
   }
@@ -2417,15 +2851,15 @@ $('#import-file').addEventListener('change', async ev => {
   const arquivo = ev.target.files[0];
   ev.target.value = '';
   if (!arquivo) return;
-  let d = null;
-  try { const j = JSON.parse(await arquivo.text()); d = normalizar(j.dados || j); } catch { d = null; }
+  let d = null, bruto = null;
+  try { const j = JSON.parse(await arquivo.text()); bruto = j.dados || j; d = normalizar(bruto); } catch { d = null; }
   if (!d) { toast('Este arquivo não é um backup do Planner de treino.'); return; }
   const ok = await confirmar({
     titulo: 'Importar backup?',
-    texto: trocaDados('do arquivo', d),
+    texto: trocaDados('do arquivo', d) + avisoNoDialogo(bruto),
     ok: 'Importar backup',
   });
-  if (ok) aplicarBackup(d, 'Backup importado');
+  if (ok) aplicarBackup(d, `Backup importado${avisoPrograma(bruto, d)}`);
 });
 
 /* ---------- Avisos, desfazer e diálogos ---------- */
@@ -2498,11 +2932,20 @@ document.addEventListener('click', ev => {
     case 'mais': alternarMais(+i); break;
     case 'add-serie': adicionarSerie(); break;
     case 'remover-serie': removerSerie(); break;
-    case 'prio': {
-      const ex = exDoTreino(t, id);
-      if (ex) { ex.prioridade = !ex.prioridade; b.setAttribute('aria-pressed', String(ex.prioridade)); salvar(); }
+    // Liga e desliga, no exercício do treino: prioridade, F e bi-set (o bi-set redesenha, para mostrar o par)
+    case 'prio': case 'falha': case 'biset': {
+      const ex = exDoTreino(t, id), k = act === 'prio' ? 'prioridade' : act;
+      if (!ex) break;
+      ex[k] = !ex[k];
+      b.setAttribute('aria-pressed', String(ex[k]));
+      salvar();
+      if (k === 'biset') render();
       break;
     }
+    case 'prog-ver': ui.progAberto.has(id) ? ui.progAberto.delete(id) : ui.progAberto.add(id); render(); break;
+    case 'prog-salvar': comDesfazer('Cópia salva em Programas salvos', () => guardarPrograma(S)); break;
+    case 'prog-usar': usarPrograma(id); break;
+    case 'prog-apagar': apagarPrograma(id); break;
     case 'periodo': ui.periodo = b.dataset.p; render(); break;
     case 'instalar': instalarApp(); break;
     case 'finalizar-ex': finalizarEx(); break;
@@ -2547,12 +2990,16 @@ document.addEventListener('click', ev => {
 });
 
 // Cada campo editável aponta para [objeto, chave]: "t-*" é o treino, "e-*" o exercício (ou cardio) do treino,
-// "s-*" a série ou trecho da janela aberta e "p-*" o peso e a altura da pessoa
+// "s-*" a série ou trecho da janela aberta, "r-*" o descanso de um tipo de série (A, P ou T) do exercício aberto,
+// "g-*" o programa em uso, "k-*" um programa salvo e "p-*" o peso e a altura da pessoa
 function alvoCampo(el) {
   const { f, t, id, i } = el.dataset;
   if (f?.startsWith('t-')) return [treinoPorId(t), f.slice(2)];
+  if (f?.startsWith('g-')) return [S.programa, f.slice(2)];
+  if (f?.startsWith('k-')) return [programaPorId(id), f.slice(2)];
   if (f?.startsWith('e-')) return [exDoTreino(t, id), f.slice(2)];
   if (f?.startsWith('s-')) return [exAberto()?.sets[+i], f.slice(2)];
+  if (f?.startsWith('r-')) return [exAberto(), CAMPO_DESCANSO[f.slice(2)]];
   if (f?.startsWith('p-')) return [S.perfil, f.slice(2)];
   return [];
 }
@@ -2562,9 +3009,13 @@ function aplicarCampo(el) {
   if (!obj) return;
   const { f } = el.dataset;
   const v = el.value.trim();
-  if (k === 'nome' || k === 'foco' || k === 'meta') obj[k] = el.value;
+  if (f.startsWith('r-')) return guardarDescanso(obj, f.slice(2), v, el);
+  if (k === 'nome' || k === 'foco' || k === 'meta' || k === 'obs') obj[k] = el.value;
   else if (f === 'e-reps') { if (v) obj.reps = textoReps(v); }
   else if (f === 'e-series') obj.series = clampInt(v, 1, 99, obj.series);
+  else if (f === 'e-descanso') obj.descanso = clampInt(v, 5, 600, obj.descanso);
+  else if (f === 'e-preparo') { if (temChave(PLANOS, v)) obj.preparo = v; }
+  else if (f === 'g-inicio') obj.inicio = lerDataISO(v);
   else obj[k] = lerCampo(k, v); // séries, trechos, peso e altura
   salvar();
 }
@@ -2579,12 +3030,23 @@ document.addEventListener('input', ev => {
     const limpo = el.value.replace(filtroDe(el.dataset.f.slice(2)), '');
     if (limpo !== el.value) el.value = limpo;
   }
+  if (el.dataset.f.startsWith('r-')) return; // o descanso grava quando a pessoa termina de digitar (change)
   aplicarCampo(el);
   if (/^[sp]-/.test(el.dataset.f)) atualizarCalc();
+  if (el.dataset.f === 's-peso') atualizarPreparo(+el.dataset.i);
 });
 
-// Nome do exercício na Biblioteca: renomeia ao sair do campo (ou ao apertar Enter)
-document.addEventListener('change', ev => { if (ev.target.id === 'ex-nome') renomearExercicio(ui.libAberto, ev.target.value); });
+// Nome do exercício na Biblioteca: renomeia ao sair do campo (ou ao apertar Enter). Grupo muscular: muda na hora
+document.addEventListener('change', ev => {
+  if (ev.target.id === 'ex-nome') renomearExercicio(ui.libAberto, ev.target.value);
+  // Descanso de um tipo de série: vale para as séries desse tipo e o cronômetro parado já mostra o novo
+  if (ev.target.dataset?.f?.startsWith('r-')) { aplicarCampo(ev.target); atualizarTimerUI(); }
+  if (ev.target.id === 'ex-grupo') {
+    const ex = exPorId(ui.libAberto);
+    if (ex && grupoValido(ev.target.value)) { ex.grupo = ev.target.value; salvarAgora(); }
+  }
+  if (ev.target.dataset?.f === 'g-inicio') render(); // a semana do programa muda com a data
+});
 
 // Campo de número (e de repetições) fica vazio ao clicar; se sair sem digitar, volta o valor anterior
 const CAMPO_LIMPA = 'input.num, input.limpa';
@@ -2652,6 +3114,10 @@ $('#nav').innerHTML = [['hoje', 'Hoje'], ['treinos', 'Treinos'], ['biblioteca', 
 render(true);
 renderDrive();       // o ponto de aviso na aba Ajustes, se houver backup de outro aparelho
 lerLinkConexao();    // aberto pelo link de "Conectar outro aparelho"
+if (programaTrocado) { // primeira vez nesta versão: o programa novo já fica gravado
+  salvarAgora();
+  toast(`Os treinos agora seguem o programa novo.${S.programas.length ? ' O anterior ficou na aba Treinos, em Programas salvos.' : ''}`);
+}
 if (driveLigado() && hashDados() !== DR.hash) agendarBackup(3000); // manda o que ficou sem backup da última vez
 window.addEventListener('online', () => fazerBackup());
 </script>
