@@ -343,6 +343,13 @@ a.btn{color:inherit;text-decoration:none}
 .kcal span,.stat span{font-size:12px;font-weight:600;color:var(--muted)}
 .kcal b{font-size:46px;font-weight:600;line-height:1}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+.stats.quatro{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* Aba Peso: campo do peso, dia e botão numa linha (no celular, o botão embaixo); na lista, o peso dá para corrigir */
+.peso-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end}
+.peso-form .btn{height:44px}
+.peso-linha .row-main{flex:1}
+.peso-edit{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.peso-edit .field{width:88px;height:40px;font-size:19px}
 .stat{display:flex;flex-direction:column;gap:2px;min-width:0;background:var(--surface);border-radius:12px;padding:10px 12px}
 .stat b{font-size:23px;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .corpo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -390,6 +397,9 @@ a.btn{color:inherit;text-decoration:none}
   .ex-edit .del{grid-column:3;grid-row:1}
   .cardio-edit .meta{grid-column:1 / 3}
   .ex-mais{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px;grid-template-areas:"plano desc falha" "obs obs biset"}
+  .stats.quatro{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .peso-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .peso-form .btn{grid-column:1 / -1}
   .sheet-wrap{padding:0}
   .sheet{width:100%;height:100%;border-radius:0}
   .sheet-head{padding:10px 12px 10px 6px}
@@ -445,6 +455,7 @@ const ICONS = {
   arquivo: '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8M10 12h4"/>',
   mais: '<path d="M7 12l5-5 5 5M7 18l5-5 5 5"/>',
   biset: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  peso: '<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8.5 10.5a3.5 3.5 0 0 1 7 0M12 10.5l1.6-2.2"/>',
 };
 const icon = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
@@ -472,6 +483,7 @@ const fmtDiaMes = ts => {
 };
 const pad2 = n => String(n).padStart(2, '0');
 const dataISO = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const hojeISO = () => dataISO(Date.now());
 const DIA_MS = 864e5;
 const inicioDoDia = ts => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d; }; // meia-noite do dia (Date)
 const diasDesde = ts => Math.round((inicioDoDia(Date.now()) - inicioDoDia(ts)) / DIA_MS); // 0 hoje, 1 ontem…
@@ -481,6 +493,7 @@ const temChave = (tabela, k) => typeof k === 'string' && Object.prototype.hasOwn
 const NUM0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
 const NUM1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 const NUM2 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+const fmtKg = v => `${NUM2.format(v)} kg`;
 const VEL = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const aprox = (v, fmt = NUM0) => v == null ? '–' : `≈ ${fmt.format(v)}`;
 const comUnidade = (v, u) => vazio(v) ? '–' : `${fmtNum(v)} ${u}`;
@@ -686,11 +699,11 @@ const faixaDoDia = (series, k) => {
 };
 const FORCA = {
   graficos: [
-    { titulo: 'Carga', sub: 'Maior, média e menor carga das séries de trabalho (T) de cada dia, em kg.', faixa: series => faixaDoDia(series, 'peso'), fmt: v => `${NUM2.format(v)} kg` },
+    { titulo: 'Carga', sub: 'Maior, média e menor carga das séries de trabalho (T) de cada dia, em kg.', faixa: series => faixaDoDia(series, 'peso'), fmt: fmtKg },
     { titulo: 'Repetições', sub: 'Maior, média e menor número de repetições por série de trabalho (T), em cada dia.', faixa: series => faixaDoDia(series, 'reps'), fmt: v => `${NUM1.format(v)} reps` },
     { titulo: 'RIR', sub: 'Média das séries de trabalho (T) de cada dia: quantas repetições ainda daria para fazer antes da falha.', valor: series => faixaDoDia(series, 'rir')?.med, fmt: v => `RIR ${NUM1.format(v)}` },
   ],
-  recorde: { rotulo: 'Maior carga', valor: series => faixaDoDia(series, 'peso')?.max, fmt: v => `${NUM2.format(v)} kg` },
+  recorde: { rotulo: 'Maior carga', valor: series => faixaDoDia(series, 'peso')?.max, fmt: fmtKg },
 };
 
 // Soma os trechos que têm conta; calorias e passos só quando todos esses trechos têm o dado
@@ -719,6 +732,20 @@ const VERSAO = 5; // 3: Biblioteca de exercícios (criada por sincronizarBibliot
 const textoReps = v => String(v ?? '').trim().replace(/\s*-\s*/g, '–');
 // Primeiro número da meta, usado como sugestão no campo de repetições ("12–15" → 12)
 const repsAlvo = reps => { const n = parseInt(String(reps).match(/\d+/)?.[0], 10); return Number.isFinite(n) ? n : ''; };
+
+// Peso corporal: um registro por dia ({ dia: "2026-11-21", kg }), do mais antigo ao mais novo
+const PESO_MIN = 20, PESO_MAX = 400, AVISO_PESO = `Digite um peso entre ${PESO_MIN} e ${PESO_MAX} kg.`;
+const diaValido = s => typeof s === 'string' && lerDataISO(s) != null && dataISO(lerDataISO(s)) === s;
+const pesoValido = kg => typeof kg === 'number' && kg >= PESO_MIN && kg <= PESO_MAX;
+const porDia = (a, b) => (a.dia < b.dia ? -1 : 1);
+function lerPesos(lista) {
+  const kgDoDia = new Map(); // dia repetido: fica o último
+  for (const x of objetos(lista)) {
+    const kg = lerCampo('peso', x.kg);
+    if (diaValido(x.dia) && pesoValido(kg)) kgDoDia.set(x.dia, kg);
+  }
+  return [...kgDoDia].map(([dia, kg]) => ({ dia, kg })).sort(porDia);
+}
 
 // preparo: as séries A e P (PLANOS); falha: F; biset: faz par com o próximo exercício do treino; obs: observação
 function novoExercicio(dados = {}) {
@@ -800,7 +827,7 @@ const treinosDoPrograma = (existente = () => null) => PROGRAMA.map(t => ({
 }));
 
 function exemplo() {
-  const d = { v: VERSAO, treinos: treinosDoPrograma(), programa: { nome: NOME_PROGRAMA, inicio: null }, programas: [], sessao: null, historico: [], perfil: { peso: '', altura: '' } };
+  const d = { v: VERSAO, treinos: treinosDoPrograma(), programa: { nome: NOME_PROGRAMA, inicio: null }, programas: [], sessao: null, historico: [], perfil: { peso: '', altura: '' }, pesos: [] };
   sincronizarBiblioteca(d, []);
   podarBiblioteca(d);
   return d;
@@ -1008,6 +1035,7 @@ function normalizar(d) {
       };
     }),
     perfil: corpo(d.perfil),
+    pesos: lerPesos(d.pesos),
   };
   sincronizarBiblioteca(saida, d.biblioteca);
   for (let v = (Number(d.v) || 1) + 1; v <= VERSAO; v++) MIGRACOES[v]?.(saida);
@@ -1043,14 +1071,15 @@ document.addEventListener('visibilitychange', () => {
   // Ao sair do app, salva e já manda para o Drive o que ainda não foi
   if (document.hidden) { salvarAgora(); fazerBackup(); return; }
   tick();
-  // Se virou o dia com o app aberto, atualiza a tela "Hoje"
-  if (new Date().toDateString() !== diaRenderizado && ui.tab === 'hoje' && !ui.exAberto) render();
+  // Se virou o dia com o app aberto, redesenha a tela (Hoje, a semana do programa, o dia do peso…)
+  if (new Date().toDateString() !== diaRenderizado && !ui.exAberto) render();
 });
 
 const ui = {
   tab: 'hoje', exAberto: null, histAberto: new Set(), desfazer: null, toastT: 0, fecharDialogo: null, periodo: '12',
   libAberto: null, libFiltro: 'todos', libBusca: '', periodoEx: '12', // Biblioteca: exercício aberto, filtros e período dos gráficos
   progAberto: new Set(), // Programas salvos abertos na aba Treinos
+  periodoPeso: '12', // período do gráfico e dos registros da aba Peso
 };
 const treinoPorId = id => S.treinos.find(t => t.id === id);
 const programaPorId = id => S.programas.find(p => p.id === id);
@@ -1108,12 +1137,13 @@ const vaiParaOPar = b => !!b && !b.par.feito && trabalho(b.par).some(x => !x.fei
 const descansoApos = (e, s, b = parDoBiset(e)) => ehTrabalho(s) && b?.primeiro && vaiParaOPar(b) ? 0 : descansoDe(e, s);
 
 /* ---------- Telas ---------- */
-const TELAS = { hoje: viewHoje, treinos: viewTreinos, biblioteca: viewBiblioteca, historico: viewHistorico, ajustes: viewAjustes };
+const TELAS = { hoje: viewHoje, treinos: viewTreinos, biblioteca: viewBiblioteca, historico: viewHistorico, peso: viewPeso, ajustes: viewAjustes };
 // O que a tela pede para fazer depois de entrar na página: desenhar os gráficos, que precisam da largura
 let aoMontar = [];
 
 function render(animar = false) {
   const v = $('#view');
+  diaRenderizado = new Date().toDateString();
   soltarGraficos();
   aoMontar = [];
   trocarHTML(v, TELAS[ui.tab]());
@@ -1144,7 +1174,6 @@ const linhaResumo = (e, b) => `<li><span class="tc-nome">${esc(nomeItem(e) || 'S
 function viewHoje() {
   if (S.sessao) return viewSessao();
   const agora = new Date(), wd = agora.getDay();
-  diaRenderizado = agora.toDateString();
   const doDia = S.treinos.filter(t => t.dias.includes(wd));
   const outros = S.treinos.filter(t => !t.dias.includes(wd));
   const semana = semanaDoPrograma();
@@ -1304,7 +1333,7 @@ function linhaExercicio(tid, e, emPar) {
 }
 
 // Peso e altura de quando o cardio foi feito (ou os atuais, se na época estavam vazios)
-const corpoDe = e => ({ peso: e.corpo?.peso || S.perfil.peso, altura: e.corpo?.altura || S.perfil.altura });
+const corpoDe = e => ({ peso: e.corpo?.peso || pesoAtual(), altura: e.corpo?.altura || S.perfil.altura });
 // Calorias de todos os cardios de um registro (null se faltar o peso)
 function kcalDoRegistro(h) {
   const v = h.exercicios.filter(ehCardio).map(e => contaCardio(e, e.series, corpoDe(e)).kcal).filter(x => x != null);
@@ -1427,6 +1456,11 @@ function diasDoExercicio(ex) {
 }
 const numeroOuNada = v => Number.isFinite(v) ? v : null;
 const SERIES_FAIXA = [['max', 'Máxima', 'var(--s2)'], ['med', 'Média', 'var(--s1)'], ['min', 'Mínima', 'var(--s3)']];
+// Legenda dos gráficos de linha (um traço na cor de cada série) e um quadro de número (rótulo em cima)
+const legendaHTML = series => `<div class="legenda-linhas" aria-hidden="true">${series.map(({ nome, cor }) => `<span><i style="--c:${cor}"></i>${nome}</span>`).join('')}</div>`;
+const statHTML = (rotulo, valor) => `<div class="stat"><span>${rotulo}</span><b class="num">${valor}</b></div>`;
+// Início do período dos filtros (Máx, 12M, 6M…), em ms: Máx é desde sempre
+const inicioDoPeriodo = p => p === 'max' ? 0 : +mesesAtras(Number(p));
 function seriesDoGrafico(cfg, dias) {
   const bases = dias.map(d => d.base);
   if (!cfg.faixa) return [{ nome: cfg.titulo, cor: 'var(--s1)', valores: bases.map(b => numeroOuNada(b && cfg.valor(b))) }];
@@ -1438,12 +1472,13 @@ function seriesDoGrafico(cfg, dias) {
 function viewExercicio(ex) {
   const cardio = ehCardio(ex), def = cardio ? APARELHOS[ex.aparelho] : FORCA, situacao = situacoes()(ex);
   const todos = diasDoExercicio(ex);
-  const limite = ui.periodoEx === 'max' ? 0 : +mesesAtras(Number(ui.periodoEx));
+  const limite = inicioDoPeriodo(ui.periodoEx);
   const dias = todos.filter(d => d.t >= limite);
   const recordes = todos.map(d => numeroOuNada(d.base && def.recorde.valor(d.base))).filter(v => v != null);
   const id = esc(ex.id), arquivado = situacao.situacao === 'arquivados';
-  def.graficos.forEach((cfg, i) => aoMontar.push(() => desenharLinhas($(`.graf[data-g="${i}"]`), { ...cfg, dias, series: seriesDoGrafico(cfg, dias) })));
-  const legenda = `<div class="legenda-linhas" aria-hidden="true">${SERIES_FAIXA.map(([, nome, cor]) => `<span><i style="--c:${cor}"></i>${nome}</span>`).join('')}</div>`;
+  def.graficos.forEach((cfg, i) => aoMontar.push(() => desenharLinhas($(`.graf[data-g="${i}"]`),
+    { ...cfg, dias, series: seriesDoGrafico(cfg, dias), unidade: ['dia de treino', 'dias de treino'], quando: TEXTO_PERIODO[ui.periodoEx] })));
+  const legenda = legendaHTML(SERIES_FAIXA.map(([, nome, cor]) => ({ nome, cor })));
   const registros = dias.slice().reverse().map(d => {
     const titulo = `${fmtData(d.t)} <span class="small muted">${esc(d.treino)}</span>`;
     return `<article class="hist registro">${d.entradas.map(e => cardio ? histCardio(e, titulo) : histForca(e, titulo)).join('')}</article>`;
@@ -1464,9 +1499,9 @@ function viewExercicio(ex) {
       </div>
     </header>
     <div class="stats">
-      <div class="stat"><span>Treinos</span><b class="num">${todos.length}</b></div>
-      <div class="stat"><span>${def.recorde.rotulo}</span><b class="num">${recordes.length ? def.recorde.fmt(Math.max(...recordes)) : '–'}</b></div>
-      <div class="stat"><span>Último</span><b class="num">${todos.length ? fmtDiaMes(todos[todos.length - 1].t) : '–'}</b></div>
+      ${statHTML('Treinos', todos.length)}
+      ${statHTML(def.recorde.rotulo, recordes.length ? def.recorde.fmt(Math.max(...recordes)) : '–')}
+      ${statHTML('Último', todos.length ? fmtDiaMes(todos[todos.length - 1].t) : '–')}
     </div>
     ${filtrosHTML(PERIODOS, 'periodo-ex', ui.periodoEx, 'Período dos gráficos e registros')}
     ${def.graficos.map((cfg, i) => `<section class="panel grafico">
@@ -1477,6 +1512,104 @@ function viewExercicio(ex) {
     <h2 class="section-title">Registros</h2>
     ${registros || `<div class="panel empty"><p class="muted">${todos.length ? 'Nenhum registro neste período.' : 'Ainda sem registros. Eles aparecem aqui quando você concluir um treino com este exercício.'}</p></div>`}
   </section>`;
+}
+
+/* ---------- Peso corporal ---------- */
+// O peso de agora (calorias do cardio e "Seu peso"): o do último registro. Sem registros, o que foi digitado em
+// Seus dados antes de a aba Peso existir.
+const pesoAtual = () => S.pesos.length ? S.pesos[S.pesos.length - 1].kg : S.perfil.peso;
+const corpoAtual = () => ({ peso: pesoAtual(), altura: S.perfil.altura });
+const fmtVariacao = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${fmtKg(Math.abs(v))}`;
+const dataDoDia = dia => fmtData(lerDataISO(dia));
+// Média dos registros dos 7 dias até cada um (o próprio dia e os 6 anteriores), com uma casa: mostra a tendência
+// sem o sobe e desce de água e comida. Uma passada só: a janela anda junto com os registros.
+function mediasDe7Dias(pesos) {
+  let ini = 0, soma = 0;
+  return pesos.map((p, i) => {
+    soma += p.kg;
+    const desde = dataISO(somarDias(lerDataISO(p.dia), -6));
+    while (pesos[ini].dia < desde) soma -= pesos[ini++].kg;
+    return Math.round(soma / (i - ini + 1) * 10) / 10;
+  });
+}
+// "−0,4 kg desde 20 Nov" (em relação ao registro anterior)
+const variacaoDoDia = i => i ? `${fmtVariacao(S.pesos[i].kg - S.pesos[i - 1].kg)} desde ${fmtDiaMes(lerDataISO(S.pesos[i - 1].dia))}` : 'Primeiro registro';
+const SERIES_PESO = [{ nome: 'Peso do dia', cor: 'var(--s1)' }, { nome: 'Média de 7 dias', cor: 'var(--s2)' }];
+
+function viewPeso() {
+  const atual = S.pesos[S.pesos.length - 1], hoje = hojeISO();
+  const form = `<div class="panel">
+      <div class="peso-form">
+        <label class="fld"><span>Peso (kg)</span><input class="field num" inputmode="decimal" id="peso-kg" data-filtro="peso" placeholder="${atual ? fmtNum(atual.kg) : 'Ex.: 80,5'}"></label>
+        <label class="fld"><span>Dia</span><input class="field" type="date" id="peso-dia" value="${hoje}" max="${hoje}"></label>
+        <button class="btn primary" data-act="peso-registrar">Registrar</button>
+      </div>
+      <p class="hint">Um registro por dia: registrar de novo no mesmo dia troca o anterior. O último peso também é o usado nas calorias do cardio.</p>
+    </div>`;
+  const cabeca = `<header class="page-head"><div><h1>Peso</h1><p>Registre seu peso e acompanhe a evolução.</p></div></header>`;
+  if (!atual) return `<section class="page">${cabeca}${form}<div class="panel empty"><p class="muted">Nenhum peso registrado ainda. Registre o de hoje acima: o gráfico aparece a partir do primeiro registro.</p></div></section>`;
+  // Os registros do período são o fim da lista (ela vai do mais antigo ao mais novo); ini é a posição do primeiro
+  const limite = inicioDoPeriodo(ui.periodoPeso), achou = S.pesos.findIndex(x => lerDataISO(x.dia) >= limite);
+  const ini = achou < 0 ? S.pesos.length : achou, doPeriodo = S.pesos.slice(ini);
+  const kgs = doPeriodo.map(x => x.kg), medias = mediasDe7Dias(S.pesos).slice(ini);
+  const variacoes = doPeriodo.map((_, j) => variacaoDoDia(ini + j));
+  aoMontar.push(() => desenharLinhas($('#graf-peso'), {
+    titulo: 'Peso', fmt: fmtKg, unidade: ['registro', 'registros'],
+    quando: ui.periodoPeso === 'max' ? 'desde o primeiro registro' : TEXTO_PERIODO[ui.periodoPeso],
+    dias: doPeriodo.map((x, j) => ({ t: lerDataISO(x.dia), treino: variacoes[j] })),
+    series: [{ ...SERIES_PESO[0], valores: kgs, frente: true }, { ...SERIES_PESO[1], valores: medias }],
+  }));
+  const registros = doPeriodo.map(({ dia, kg }, j) => {
+    const d = esc(dia), quando = dataDoDia(dia);
+    return `<li class="row peso-linha">
+      <span class="row-main"><b>${quando}</b><span class="small muted">${variacoes[j]}</span></span>
+      <label class="peso-edit"><input class="field num" inputmode="decimal" data-filtro="peso" data-peso-dia="${d}" value="${fmtNum(kg)}" aria-label="Peso de ${quando}, em kg">kg</label>
+      <button class="icon-btn danger" data-act="peso-apagar" data-d="${d}" aria-label="Apagar o peso de ${quando}">${icon('lixo')}</button>
+    </li>`;
+  }).reverse().join('');
+  return `<section class="page">${cabeca}${form}
+    <div class="stats quatro">
+      ${statHTML('Atual', fmtKg(atual.kg))}
+      ${statHTML('Variação', kgs.length > 1 ? fmtVariacao(kgs[kgs.length - 1] - kgs[0]) : '–')}
+      ${statHTML('Menor', kgs.length ? fmtKg(Math.min(...kgs)) : '–')}
+      ${statHTML('Maior', kgs.length ? fmtKg(Math.max(...kgs)) : '–')}
+    </div>
+    ${filtrosHTML(PERIODOS, 'periodo-peso', ui.periodoPeso, 'Período do gráfico e dos registros')}
+    <section class="panel grafico">
+      <div><h2>Peso</h2><p class="small muted">Peso de cada registro e a média dos 7 dias até ele. A variação é do primeiro ao último registro do período.</p></div>
+      ${legendaHTML(SERIES_PESO)}
+      <div class="graf" id="graf-peso"></div>
+    </section>
+    <h2 class="section-title">Registros</h2>
+    ${registros ? `<ul class="row-list">${registros}</ul>` : '<div class="panel empty"><p class="muted">Nenhum registro neste período.</p></div>'}
+  </section>`;
+}
+
+// Registra (ou troca) o peso de um dia, e apaga. O último registro é o peso de agora (pesoAtual).
+function guardarPeso(dia, kg) { S.pesos = [...S.pesos.filter(x => x.dia !== dia), { dia, kg }].sort(porDia); }
+function apagarPeso(dia) { S.pesos = S.pesos.filter(x => x.dia !== dia); }
+// Botão Registrar (ou Enter no campo do peso)
+function registrarPeso() {
+  const campo = $('#peso-kg'), kg = lerCampo('peso', campo.value.trim()), dia = $('#peso-dia').value;
+  if (!pesoValido(kg)) { toast(AVISO_PESO); campo.focus(); return; }
+  if (!diaValido(dia) || dia > hojeISO()) { toast('Escolha um dia até hoje.'); return; }
+  const trocou = S.pesos.some(x => x.dia === dia);
+  comDesfazer(`${trocou ? 'Peso trocado' : 'Peso registrado'}: ${fmtKg(kg)} em ${dataDoDia(dia)}`, () => guardarPeso(dia, kg));
+}
+// Peso corrigido na lista de registros
+function corrigirPeso(el) {
+  const { pesoDia: dia } = el.dataset, kg = lerCampo('peso', el.value.trim());
+  if (!pesoValido(kg)) { toast(AVISO_PESO); render(); return; }
+  if (S.pesos.find(x => x.dia === dia)?.kg !== kg) comDesfazer(`Peso de ${dataDoDia(dia)}: ${fmtKg(kg)}`, () => guardarPeso(dia, kg));
+}
+// "Seu peso" (em Ajustes ou no cardio): mudar vira o registro de hoje, com Desfazer. Grava ao sair do campo
+// (não a cada tecla), para o Desfazer voltar ao peso de antes; então refaz as contas do cardio aberto.
+function registrarPesoDeHoje(el) {
+  const kg = lerCampo('peso', el.value.trim());
+  if (!pesoValido(kg)) { toast(AVISO_PESO); el.value = fmtNum(pesoAtual()); return; }
+  if (kg === pesoAtual()) return;
+  const mostrar = () => { document.querySelectorAll('[data-f="p-peso"]').forEach(x => { x.value = fmtNum(pesoAtual()); }); atualizarCalc(); };
+  comDesfazer('Peso de hoje registrado na aba Peso', () => guardarPeso(hojeISO(), kg), () => { render(); mostrar(); }, mostrar);
 }
 
 /* ---------- Ajustes ---------- */
@@ -1731,8 +1864,9 @@ function escalaY(min, max) {
   return { y0, y1, marcas };
 }
 
-// Linhas no tempo: cada ponto é um dia de treino. cfg = { titulo, dias: [{ t, treino }], series: [{ nome, cor, valores }], fmt }
-// (valores null = nada naquele dia). O eixo vai do primeiro dia do período até hoje, para mostrar as pausas.
+// Linhas no tempo: cada ponto é um dia de treino (ou um registro de peso). cfg = { titulo, dias: [{ t, treino }],
+// series: [{ nome, cor, valores }], fmt, unidade: [um, vários], quando: "nos últimos 12 meses" } (valores null = nada
+// naquele dia; treino é a linha cinza da dica). O eixo vai do primeiro dia do período até hoje, para mostrar as pausas.
 function desenharLinhas(box, cfg) {
   const usados = cfg.dias.map((_, i) => i).filter(i => cfg.series.some(s => s.valores[i] != null));
   if (!usados.length) { box.innerHTML = '<p class="hint">Nada registrado neste período.</p>'; return; }
@@ -1766,7 +1900,7 @@ function desenharLinhas(box, cfg) {
   }).join('');
   const ponto = (s, i, r) => s.valores[i] == null ? '' : `<circle class="ponto" cx="${xs[i].toFixed(1)}" cy="${y(s.valores[i]).toFixed(1)}" r="${r}" style="fill:${s.cor}"/>`;
   const pontos = dias.length > 40 ? '' : camadas.map(s => dias.map((_, i) => ponto(s, i, 4)).join('')).join('');
-  const rotulo = `${cfg.titulo}: ${plural(dias.length, 'dia de treino', 'dias de treino')} ${TEXTO_PERIODO[ui.periodoEx]}. Use as setas para ver cada dia.`;
+  const rotulo = `${cfg.titulo}: ${plural(dias.length, ...cfg.unidade)} ${cfg.quando}. Use as setas para ver cada dia.`;
   box.innerHTML = `<svg width="${largura}" height="${H}" viewBox="0 0 ${largura} ${H}" tabindex="0" role="img" aria-label="${esc(rotulo)}">${grade}${datas}${linhas}${pontos}<line class="mira" y1="${TOPO}" y2="${TOPO + ALT}" visibility="hidden"/><g class="ativos"></g></svg><div class="dica" role="status" hidden></div>`;
   const svg = box.querySelector('svg'), mira = svg.querySelector('.mira'), ativos = svg.querySelector('.ativos');
   // A mira acha o dia mais perto do ponteiro na horizontal; a dica lista todas as linhas daquele dia
@@ -1915,24 +2049,24 @@ function calcHTML(e, c) {
   const a = APARELHOS[e.aparelho], ok = c.n > 0;
   const valor = (v, fmt, unidade) => ok ? `${fmt.format(v)}${unidade ? `<small>${unidade}</small>` : ''}` : '–';
   const quadro = a.quadro(c, valor, ['Tempo', ok ? `${mostrarCampo('min', c.min)}<small>min</small>` : '–']);
-  const semPeso = !(S.perfil.peso > 0), semAltura = a.usaAltura && !(S.perfil.altura > 0);
+  const semPeso = !(pesoAtual() > 0), semAltura = a.usaAltura && !(S.perfil.altura > 0);
   const aviso = !ok ? a.vazio
     : semPeso && semAltura ? 'Preencha seu peso e sua altura abaixo para estimar calorias e passos.'
     : semPeso ? 'Preencha seu peso abaixo para estimar as calorias.'
     : semAltura ? 'Preencha sua altura abaixo para estimar os passos.' : a.como;
   return `<h3>Calculadora</h3>
     <div class="kcal"><span>Calorias gastas</span><b class="num">${aprox(c.kcal)}<small>kcal</small></b></div>
-    <div class="stats">${quadro.map(([rotulo, v]) => `<div class="stat"><span>${rotulo}</span><b class="num">${v}</b></div>`).join('')}</div>
+    <div class="stats">${quadro.map(([rotulo, v]) => statHTML(rotulo, v)).join('')}</div>
     <p class="hint">${aviso}</p>`;
 }
 
 function corpoHTML(aparelho) {
   const comAltura = APARELHOS[aparelho].usaAltura;
   return `<div class="corpo">
-      <label class="fld"><span>Seu peso (kg)</span><input class="field num" inputmode="decimal" data-f="p-peso" value="${fmtNum(S.perfil.peso)}" placeholder="Ex.: 80"></label>
+      <label class="fld"><span>Seu peso (kg)</span><input class="field num" inputmode="decimal" data-f="p-peso" value="${fmtNum(pesoAtual())}" placeholder="Ex.: 80"></label>
       ${comAltura ? `<label class="fld"><span>Sua altura (m)</span><input class="field num" inputmode="decimal" data-f="p-altura" value="${fmtNum(S.perfil.altura)}" placeholder="Ex.: 1,75"></label>` : ''}
     </div>
-    <p class="hint">${comAltura ? 'Peso e altura ficam só neste aparelho e servem para as estimativas.' : 'O peso fica só neste aparelho e serve para estimar as calorias.'}</p>`;
+    <p class="hint">${comAltura ? 'Peso e altura ficam só neste aparelho e servem para as estimativas.' : 'O peso fica só neste aparelho e serve para estimar as calorias.'} Mudar o peso aqui registra o de hoje na aba Peso.</p>`;
 }
 
 // Único lugar que faz as contas na tela: a "razão" de cada trecho (velocidade e ritmo, ou degraus por minuto)
@@ -1940,7 +2074,7 @@ function corpoHTML(aparelho) {
 function atualizarCalc() {
   const e = exAberto(), box = $('#calc');
   if (!ehCardio(e) || !box) return;
-  const a = APARELHOS[e.aparelho], c = contaCardio(e, e.sets, S.perfil);
+  const a = APARELHOS[e.aparelho], c = contaCardio(e, e.sets, corpoAtual());
   $('#sets').querySelectorAll('.trecho-calc').forEach(el => {
     const r = c.contas[+el.dataset.tc];
     el.innerHTML = r ? a.trecho(r) + (r.kcal == null ? '' : `<span>${aprox(r.kcal)} kcal</span>`) : '';
@@ -2055,7 +2189,7 @@ function avisoMais(e) {
   const faceis = ultimasSeries(e.exId).filter(s => s.mais);
   if (!faceis.length) return '';
   const pesos = faceis.map(s => s.peso).filter(v => typeof v === 'number');
-  return `<p class="aviso-mais">${icon('mais', 18)}<span>Na última vez ainda dava para fazer muito mais em ${plural(faceis.length, 'série', 'séries')}${pesos.length ? `, com até ${NUM2.format(Math.max(...pesos))} kg` : ''}. Pode ser hora de subir a carga.</span></p>`;
+  return `<p class="aviso-mais">${icon('mais', 18)}<span>Na última vez ainda dava para fazer muito mais em ${plural(faceis.length, 'série', 'séries')}${pesos.length ? `, com até ${fmtKg(Math.max(...pesos))}` : ''}. Pode ser hora de subir a carga.</span></p>`;
 }
 
 function adicionarSerie() {
@@ -2242,7 +2376,7 @@ async function concluirTreino() {
     const series = e.sets.filter(x => x.feita).map(({ feita, ...linha }) => linha);
     // Cardio guarda o peso e a altura do dia, para as calorias do histórico não mudarem depois
     return ehCardio(e)
-      ? { exId: e.exId, tipo: 'cardio', aparelho: e.aparelho, meta: e.meta, series, corpo: { ...S.perfil } }
+      ? { exId: e.exId, tipo: 'cardio', aparelho: e.aparelho, meta: e.meta, series, corpo: corpoAtual() }
       : { exId: e.exId, nome: e.nome, metaSeries: e.series, metaReps: e.reps, series };
   }).filter(e => e.series.some(ehTrabalho)); // só aquecimento e preparação não vira registro
   if (!exs.length) {
@@ -2352,12 +2486,12 @@ function baixarArquivo(nome, conteudo, tipo) {
 // O mesmo formato vale para o arquivo exportado e para o backup no Google Drive
 const pacoteBackup = dados => ({ app: 'planner-treino', exportadoEm: new Date().toISOString(), dados });
 function exportar() {
-  baixarArquivo(`planner-treino-backup-${dataISO(Date.now())}.json`, JSON.stringify(pacoteBackup(S), null, 2), 'application/json');
+  baixarArquivo(`planner-treino-backup-${hojeISO()}.json`, JSON.stringify(pacoteBackup(S), null, 2), 'application/json');
   toast('Backup exportado');
 }
 
 // Texto dos diálogos de importar e de restaurar ("de" diz de onde vêm os dados)
-const trocaDados = (de, d) => `Os treinos e o histórico deste aparelho serão trocados pelos ${de}: ${plural(d.treinos.length, 'treino', 'treinos')} e ${plural(d.historico.length, 'registro', 'registros')}.`;
+const trocaDados = (de, d) => `Os treinos, o histórico e os pesos deste aparelho serão trocados pelos ${de}: ${plural(d.treinos.length, 'treino', 'treinos')}, ${plural(d.historico.length, 'registro', 'registros')} e ${plural(d.pesos.length, 'peso', 'pesos')}.`;
 
 // Backup de antes do programa novo: ao abrir, ele entra no lugar dos treinos do backup, que vão para Programas salvos
 const avisoPrograma = (bruto, d) => antesDoPrograma(bruto) && d.programas.length ? '. Os treinos dele estão em Programas salvos, e entrou o programa novo' : '';
@@ -2415,7 +2549,7 @@ function exportarCSV(exId) {
   // BOM no começo do arquivo: o Excel reconhece os acentos (UTF-8)
   const csv = '\uFEFF' + [COLUNAS_CSV, ...linhas.map(l => COLUNAS_CSV.map(k => l[k]))].map(l => l.map(celulaCSV).join(',')).join('\r\n') + '\r\n';
   const nome = exId ? chaveNome(nomeItem(exPorId(exId))).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'dados';
-  baixarArquivo(`treino-${nome || 'exercicio'}-${dataISO(Date.now())}.csv`, csv, 'text/csv;charset=utf-8');
+  baixarArquivo(`treino-${nome || 'exercicio'}-${hojeISO()}.csv`, csv, 'text/csv;charset=utf-8');
   toast('Planilha exportada');
 }
 
@@ -2549,7 +2683,7 @@ async function fazerBackup({ manual = false, substituir = false, avisarErro = ma
 
 /* Planilha do Drive: a aba Exercícios (todos, com a situação de cada um) e uma aba por exercício com registros,
    uma linha por série ou trecho. Só vão as abas que mudaram desde a última vez (o resumo de cada uma fica em DR.abas). */
-const ABA_INDICE = 'Exercícios';
+const ABA_INDICE = 'Exercícios', ABA_PESO = 'Peso corporal';
 const TITULOS_PLANILHA = {
   data: 'Data', hora: 'Hora', treino: 'Treino', serie_ou_trecho: 'Série', tipo_serie: 'Tipo de série', peso_kg: 'Peso (kg)', repeticoes: 'Repetições', rir: 'RIR',
   dava_muito_mais: 'Dava muito mais', distancia_km: 'Distância (km)', tempo_min: 'Tempo (min)', inclinacao_pct: 'Inclinação (%)',
@@ -2558,7 +2692,7 @@ const TITULOS_PLANILHA = {
 };
 const SITUACAO_PLANILHA = { uso: 'Em uso', fora: 'Fora do plano', arquivados: 'Arquivado' };
 function abasPlanilha() {
-  const situacao = situacoes(), porEx = new Map(), usados = new Set([ABA_INDICE.toLowerCase()]);
+  const situacao = situacoes(), porEx = new Map(), usados = new Set([ABA_INDICE.toLowerCase(), ABA_PESO.toLowerCase()]);
   for (const l of linhasCSV()) {
     const lista = porEx.get(l.exId);
     if (lista) lista.push(l); else porEx.set(l.exId, [l]);
@@ -2575,6 +2709,10 @@ function abasPlanilha() {
   const exs = [...S.biblioteca.filter(ex => !ehCardio(ex)).sort(porNome), ...S.biblioteca.filter(ehCardio).sort(porNome)];
   const indice = { nome: ABA_INDICE, colunas: ['Exercício', 'Tipo', 'Grupo muscular', 'Situação', 'Treinos', 'Dias de treino', 'Último registro'], linhas: [] };
   const abas = [indice];
+  if (S.pesos.length) {
+    const medias = mediasDe7Dias(S.pesos);
+    abas.push({ nome: ABA_PESO, colunas: ['Data', 'Peso (kg)', 'Média de 7 dias (kg)'], linhas: S.pesos.map((x, i) => [x.dia, x.kg, medias[i]]) });
+  }
   for (const ex of exs) {
     const s = situacao(ex), linhas = porEx.get(ex.id) || [];
     indice.linhas.push([nomeItem(ex), ehCardio(ex) ? 'Cardio' : 'Musculação', GRUPOS[ex.grupo] ?? '', SITUACAO_PLANILHA[s.situacao], s.treinos.join(', '), s.dias, s.ultimo ? dataISO(s.ultimo) : '']);
@@ -2921,6 +3059,9 @@ document.addEventListener('click', ev => {
     }
     case 'lib-filtro': ui.libFiltro = b.dataset.p; render(); break;
     case 'periodo-ex': ui.periodoEx = b.dataset.p; render(); break;
+    case 'periodo-peso': ui.periodoPeso = b.dataset.p; render(); break;
+    case 'peso-registrar': registrarPeso(); break;
+    case 'peso-apagar': comDesfazer(`Peso de ${dataDoDia(d)} apagado`, () => apagarPeso(d)); break;
     case 'lib-arquivar': arquivarExercicio(id); break;
     case 'lib-desarquivar': desarquivarExercicio(id); break;
     case 'lib-exportar': exportarCSV(id); break;
@@ -2991,7 +3132,8 @@ document.addEventListener('click', ev => {
 
 // Cada campo editável aponta para [objeto, chave]: "t-*" é o treino, "e-*" o exercício (ou cardio) do treino,
 // "s-*" a série ou trecho da janela aberta, "r-*" o descanso de um tipo de série (A, P ou T) do exercício aberto,
-// "g-*" o programa em uso, "k-*" um programa salvo e "p-*" o peso e a altura da pessoa
+// "g-*" o programa em uso, "k-*" um programa salvo e "p-*" o peso e a altura da pessoa (o peso é o de agora, da aba
+// Peso: o campo só mostra, e registrarPesoDeHoje grava)
 function alvoCampo(el) {
   const { f, t, id, i } = el.dataset;
   if (f?.startsWith('t-')) return [treinoPorId(t), f.slice(2)];
@@ -3000,6 +3142,7 @@ function alvoCampo(el) {
   if (f?.startsWith('e-')) return [exDoTreino(t, id), f.slice(2)];
   if (f?.startsWith('s-')) return [exAberto()?.sets[+i], f.slice(2)];
   if (f?.startsWith('r-')) return [exAberto(), CAMPO_DESCANSO[f.slice(2)]];
+  if (f === 'p-peso') return [corpoAtual(), 'peso'];
   if (f?.startsWith('p-')) return [S.perfil, f.slice(2)];
   return [];
 }
@@ -3025,12 +3168,15 @@ document.addEventListener('input', ev => {
   // Busca da Biblioteca: refaz só a lista, para o campo não perder o foco
   if (el.id === 'lib-busca') { ui.libBusca = el.value; $('#lib-lista').innerHTML = listaBibliotecaHTML(); return; }
   if (el.id === 'drive-url') { dr.url = el.value; return; } // o endereço digitado continua no campo se o painel redesenhar
-  if (!el.dataset?.f) return;
-  if (el.classList.contains('num')) {
-    const limpo = el.value.replace(filtroDe(el.dataset.f.slice(2)), '');
+  // Campo de número aceita só o que cabe nele: pelo tipo do campo (data-f) ou, sem ele, por data-filtro
+  const tipo = el.dataset?.filtro ?? el.dataset?.f?.slice(2);
+  if (tipo && el.classList.contains('num')) {
+    const limpo = el.value.replace(filtroDe(tipo), '');
     if (limpo !== el.value) el.value = limpo;
   }
-  if (el.dataset.f.startsWith('r-')) return; // o descanso grava quando a pessoa termina de digitar (change)
+  if (!el.dataset?.f) return;
+  // O descanso e o seu peso gravam quando a pessoa termina de digitar (change)
+  if (el.dataset.f.startsWith('r-') || el.dataset.f === 'p-peso') return;
   aplicarCampo(el);
   if (/^[sp]-/.test(el.dataset.f)) atualizarCalc();
   if (el.dataset.f === 's-peso') atualizarPreparo(+el.dataset.i);
@@ -3046,6 +3192,8 @@ document.addEventListener('change', ev => {
     if (ex && grupoValido(ev.target.value)) { ex.grupo = ev.target.value; salvarAgora(); }
   }
   if (ev.target.dataset?.f === 'g-inicio') render(); // a semana do programa muda com a data
+  if (ev.target.dataset?.pesoDia) corrigirPeso(ev.target); // peso corrigido na lista da aba Peso
+  if (ev.target.dataset?.f === 'p-peso') registrarPesoDeHoje(ev.target); // seu peso, em Ajustes ou no cardio
 });
 
 // Campo de número (e de repetições) fica vazio ao clicar; se sair sem digitar, volta o valor anterior
@@ -3067,6 +3215,7 @@ document.addEventListener('focusout', ev => {
 
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Enter' && ev.target.id === 'drive-url') return conectarDrive(ev.target.value);
+  if (ev.key === 'Enter' && ev.target.id === 'peso-kg') return registrarPeso();
   // Mantém o Tab dentro do diálogo ou da janela do exercício abertos
   if (ev.key === 'Tab') {
     const modal = $('.dlg') || $('.sheet');
@@ -3109,7 +3258,7 @@ async function instalarApp() {
 /* ---------- Início ---------- */
 $('#brand-mark').innerHTML = icon('treinos', 18);
 $('#instalar').insertAdjacentHTML('afterbegin', icon('baixar', 18));
-$('#nav').innerHTML = [['hoje', 'Hoje'], ['treinos', 'Treinos'], ['biblioteca', 'Biblioteca'], ['historico', 'Histórico'], ['ajustes', 'Ajustes']]
+$('#nav').innerHTML = [['hoje', 'Hoje'], ['treinos', 'Treinos'], ['biblioteca', 'Biblioteca'], ['historico', 'Histórico'], ['peso', 'Peso'], ['ajustes', 'Ajustes']]
   .map(([k, nome]) => `<button data-act="tab" data-tab="${k}">${icon(k)}<span>${nome}</span></button>`).join('');
 render(true);
 renderDrive();       // o ponto de aviso na aba Ajustes, se houver backup de outro aparelho
