@@ -40,7 +40,7 @@
 html{-webkit-text-size-adjust:100%;background:var(--bg)}
 body{background:var(--bg);color:var(--text);font:400 15px/1.45 Manrope,system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh;min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 body.locked{overflow:hidden}
-button,input{font:inherit;color:inherit}
+button,input,textarea{font:inherit;color:inherit}
 button{background:none;border:0;cursor:pointer}
 ul,ol{list-style:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -88,6 +88,7 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
 .icon-btn{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;color:var(--muted);flex:none;transition:background .15s,color .15s}
 .icon-btn:hover{background:var(--raised);color:var(--text)}
 .icon-btn.danger:hover{color:var(--danger)}
+.icon-btn:disabled,.icon-btn:disabled:hover{opacity:.4;cursor:not-allowed;background:none;color:var(--muted)}
 .add-btn{width:100%;height:44px;border:1.5px dashed var(--line);border-radius:var(--r-md);color:var(--muted);font-weight:600;transition:border-color .15s,color .15s}
 .add-btn:hover{border-color:var(--second);color:var(--text)}
 .add-btn:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line);color:var(--muted)}
@@ -120,6 +121,8 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding:0 26
 .tc-ex li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .tc-ex li:first-child{border-top:0;padding-top:0}
 .tc-ex .num{font-size:19px;color:var(--muted);flex:none}
+/* Meta do cardio na lista: um estágio comprido termina em reticências (com mais de um, aparece quantos são) */
+.tc-ex .meta-cardio{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row-list{display:flex;flex-direction:column;gap:8px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border-radius:var(--r-md);padding:12px 12px 12px 16px}
 .row-main{display:flex;flex-direction:column;min-width:0}
@@ -158,7 +161,15 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding:0 26
 .ex-edit-list{display:flex;flex-direction:column;gap:10px}
 .ex-edit{display:grid;grid-template-columns:minmax(0,1fr) 84px 140px 40px 40px;gap:10px;align-items:end;padding:12px;background:var(--bg);border-radius:var(--r-md)}
 .ex-edit .icon-btn{margin-bottom:2px}
-.cardio-edit .meta{grid-column:2 / 5}
+/* Cardio no editor: em cima o aparelho e remover; embaixo a meta, um estágio em cada caixa (a caixa cresce com o texto) */
+.cardio-edit .name{grid-column:1 / 5}
+.cardio-edit .etapas{grid-column:1 / -1}
+.etapas-edit{display:flex;flex-direction:column;gap:8px}
+.etapas-edit li{display:grid;grid-template-columns:22px minmax(0,1fr) 40px;gap:8px;align-items:start}
+.etapa-n{line-height:44px;text-align:center;font-size:19px;font-weight:600;color:var(--muted)}
+.field.etapa{display:block;height:auto;min-height:44px;padding:11px 12px;line-height:1.35;resize:none;field-sizing:content}
+.etapas-edit .icon-btn{margin:2px 0 0}
+.etapas .add-btn{width:auto;height:40px;align-self:flex-start;margin-left:30px;padding:0 16px}
 .field.limpa{text-align:center;font-family:var(--num);font-size:19px;font-weight:600;padding:0 6px}
 .prio[aria-pressed="true"],.prio[aria-pressed="true"]:hover{color:var(--second)}
 .prio[aria-pressed="true"] svg{fill:currentColor}
@@ -290,6 +301,9 @@ a.btn{color:inherit;text-decoration:none}
 /* Lembretes do exercício (bi-set, F e observação) no topo da janela */
 .notas-ex{display:flex;flex-direction:column;gap:4px;padding:10px 12px 10px 28px;border-radius:12px;background:var(--raised);font-size:13px;line-height:1.4;list-style:disc}
 .notas-ex li::marker{color:var(--second)}
+/* Meta do cardio em estágios, em ordem, no topo da janela */
+.notas-ex.etapas-ex{list-style:decimal;font-size:15px}
+.etapas-ex li::marker{font-family:var(--num);font-weight:600}
 .desc{display:flex;align-items:center;gap:2px;min-height:24px;padding:0 3px;border-radius:6px;font-size:12px;color:var(--muted);cursor:text}
 .desc:hover{background:var(--raised)}
 .desc svg{flex:none}
@@ -395,7 +409,6 @@ a.btn{color:inherit;text-decoration:none}
   .ex-edit{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px}
   .ex-edit .name{grid-column:1 / 3}
   .ex-edit .del{grid-column:3;grid-row:1}
-  .cardio-edit .meta{grid-column:1 / 3}
   .ex-mais{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px;grid-template-areas:"plano desc falha" "obs obs biset"}
   .stats.quatro{grid-template-columns:repeat(2,minmax(0,1fr))}
   .peso-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -754,7 +767,12 @@ function novoExercicio(dados = {}) {
     prioridade: false, preparo: '', falha: false, biset: false, obs: '', ...dados,
   };
 }
-function novoCardio() { return { id: uid(), tipo: 'cardio', aparelho: 'esteira', meta: '' }; }
+// Meta do cardio em estágios, em ordem ("5 min leve", "17 min moderado (esforço 5, 75–85 rpm)", "3 min leve").
+// Na caixa do estágio, Enter ou → abrem a caixa seguinte; um texto colado com vários (um por linha, ou com →) abre uma para cada
+const ETAPA_MAX = 100, ETAPAS_MAX = 40, SEPARA_ETAPAS = /\s*(?:→|\r?\n)\s*/;
+// Os estágios sem caixa vazia nem espaço sobrando (no editor, a lista pode ter caixas ainda vazias)
+const limparEtapas = lista => lista.map(s => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, ETAPA_MAX)).filter(Boolean).slice(0, ETAPAS_MAX);
+function novoCardio() { return { id: uid(), tipo: 'cardio', aparelho: 'esteira', etapas: [] }; }
 // Nova série ou trecho; campos de escolha (o esforço da bike) nunca ficam vazios e já vêm com a sugestão
 function novaLinha(e, i, anteriores) {
   const campos = camposDe(e), escolhas = campos.filter(k => CAMPOS[k].opcoes);
@@ -984,7 +1002,8 @@ function normalizar(d) {
   }));
   const corpo = c => ({ peso: lerCampo('peso', c?.peso), altura: lerCampo('altura', c?.altura) });
   const item = e => ehCardio(e)
-    ? { id: String(e.id || uid()), tipo: 'cardio', aparelho: aparelho(e.aparelho), meta: String(e.meta ?? '').slice(0, 30) }
+    // Os dados de antes tinham a meta num texto só: vira o 1º estágio (ou mais, se tinha →)
+    ? { id: String(e.id || uid()), tipo: 'cardio', aparelho: aparelho(e.aparelho), etapas: limparEtapas(Array.isArray(e.etapas) ? e.etapas : String(e.meta ?? '').split(SEPARA_ETAPAS)) }
     : {
       id: String(e.id || uid()), nome: String(e.nome ?? ''),
       series: clampInt(e.series, 1, 99, padrao.series), reps: textoReps(e.reps) || padrao.reps,
@@ -1159,8 +1178,12 @@ function render(animar = false) {
 const filtrosHTML = (opcoes, act, atual, rotulo) => `<div class="filtros" role="group" aria-label="${rotulo}">${opcoes.map(([k, texto]) =>
   `<button data-act="${act}" data-p="${k}" aria-pressed="${atual === k}">${texto}</button>`).join('')}</div>`;
 
-// "3 × 10–15", com F quando a última série vai até a falha
-const metaTxt = e => ehCardio(e) ? esc(e.meta || 'Cardio') : `${e.series} × ${esc(e.reps)}${e.falha ? ' F' : ''}`;
+// "3 × 10–15", com F quando a última série vai até a falha; no cardio, o estágio (se for um só) ou quantos são
+function metaTxt(e) {
+  if (!ehCardio(e)) return `${e.series} × ${esc(e.reps)}${e.falha ? ' F' : ''}`;
+  const etapas = limparEtapas(e.etapas);
+  return etapas.length > 1 ? `${etapas.length} estágios` : esc(etapas[0] || 'Cardio');
+}
 // "6 exercícios e 1 cardio"
 function contagemItens(itens) {
   const nCardio = itens.filter(ehCardio).length, nForca = itens.length - nCardio;
@@ -1169,7 +1192,11 @@ function contagemItens(itens) {
 // Etiquetas do exercício: prioridade e bi-set (b: o par dele, de paresBiset)
 const tagsEx = (e, b) => (e.prioridade ? '<span class="tag">Prioridade</span>' : '') + (b ? '<span class="tag cinza">Bi-set</span>' : '');
 // Um item na lista de um treino: nome, etiquetas e meta
-const linhaResumo = (e, b) => `<li><span class="tc-nome">${esc(nomeItem(e) || 'Sem nome')}${tagsEx(e, b)}</span><span class="num">${metaTxt(e)}</span></li>`;
+// (no cardio, um estágio comprido é cortado: o texto todo aparece ao parar o mouse)
+function linhaResumo(e, b) {
+  const meta = metaTxt(e), cardio = ehCardio(e);
+  return `<li><span class="tc-nome">${esc(nomeItem(e) || 'Sem nome')}${tagsEx(e, b)}</span><span class="num${cardio ? ' meta-cardio' : ''}"${cardio ? ` title="${meta}"` : ''}>${meta}</span></li>`;
+}
 
 function viewHoje() {
   if (S.sessao) return viewSessao();
@@ -1299,15 +1326,23 @@ function cardEditor(t) {
   </article>`;
 }
 
+// Cardio no editor: o aparelho e, embaixo, a meta em estágios, uma caixa para cada (sempre pelo menos uma)
 function linhaCardio(tid, e) {
-  const eid = esc(e.id);
+  const eid = esc(e.id), alvo = `data-t="${tid}" data-id="${eid}"`, etapas = e.etapas.length ? e.etapas : [''];
   return `<div class="ex-edit cardio-edit">
     <div class="fld name"><span id="ap-${eid}">Cardio</span>
       <div class="seg" role="group" aria-labelledby="ap-${eid}">${Object.entries(APARELHOS).map(([k, a]) =>
-        `<button class="opt" data-act="aparelho" data-t="${tid}" data-id="${eid}" data-a="${k}" aria-pressed="${e.aparelho === k}">${a.nome}</button>`).join('')}</div>
+        `<button class="opt" data-act="aparelho" ${alvo} data-a="${k}" aria-pressed="${e.aparelho === k}">${a.nome}</button>`).join('')}</div>
     </div>
-    <label class="fld meta"><span>Meta</span><input class="field" data-f="e-meta" data-t="${tid}" data-id="${eid}" value="${esc(e.meta)}" placeholder="Ex.: 20 min" maxlength="30"></label>
-    <button class="icon-btn danger del" data-act="apagar-ex" data-t="${tid}" data-id="${eid}" aria-label="Remover cardio">${icon('x')}</button>
+    <button class="icon-btn danger del" data-act="apagar-ex" ${alvo} aria-label="Remover cardio">${icon('x')}</button>
+    <div class="fld etapas"><span id="et-${eid}">Meta</span>
+      <ol class="etapas-edit" aria-labelledby="et-${eid}">${etapas.map((txt, i) => `<li>
+        <span class="etapa-n num" aria-hidden="true">${i + 1}</span>
+        <textarea class="field etapa" rows="1" maxlength="${ETAPA_MAX}" data-f="e-etapa" ${alvo} data-i="${i}" aria-label="Estágio ${i + 1}" placeholder="${i ? 'Ex.: 17 min moderado' : 'Ex.: 5 min leve'}">${esc(txt)}</textarea>
+        <button class="icon-btn" data-act="etapa-apagar" ${alvo} data-i="${i}" aria-label="Remover o estágio ${i + 1}"${etapas.length > 1 ? '' : ' disabled'}>${icon('x')}</button>
+      </li>`).join('')}</ol>
+      <button class="add-btn" data-act="etapa-add" ${alvo}${etapas.length < ETAPAS_MAX ? '' : ' disabled'}>+ Estágio</button>
+    </div>
   </div>`;
 }
 
@@ -2113,6 +2148,8 @@ function notasEx(e, b = parDoBiset(e)) {
   ].filter(Boolean);
   return notas.length ? `<ul class="notas-ex">${notas.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : '';
 }
+// Meta do cardio com mais de um estágio: a lista, em ordem, no topo da janela
+const etapasHTML = etapas => etapas.length > 1 ? `<ol class="notas-ex etapas-ex">${etapas.map(s => `<li>${esc(s)}</li>`).join('')}</ol>` : '';
 
 function abrirEx(id) {
   const e = exSessao(id);
@@ -2120,7 +2157,9 @@ function abrirEx(id) {
   ui.exAberto = id;
   const cardio = ehCardio(e), b = parDoBiset(e);
   if (!cardio && planejarPreparo(e)) salvar();
-  const sub = cardio ? (e.meta ? `Meta: ${metaTxt(e)}` : 'Cardio') : `Meta: ${metaTxt(e)} ${tagsEx(e, b)}`;
+  // No cardio do treino, os estágios já vêm limpos (do começo do treino ou da leitura dos dados): "Meta em 3 estágios"
+  const n = cardio ? e.etapas.length : 0;
+  const sub = !cardio ? `Meta: ${metaTxt(e)} ${tagsEx(e, b)}` : !n ? 'Cardio' : `Meta${n > 1 ? ' em' : ':'} ${metaTxt(e)}`;
   $('#sheet-root').innerHTML = `<div class="sheet-wrap">
     <div class="sheet-backdrop" data-act="fechar-ex"></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
@@ -2130,7 +2169,7 @@ function abrirEx(id) {
       </header>
       <div class="sheet-body">
         <div class="sets-col">
-          ${cardio ? '' : notasEx(e, b) + avisoMais(e)}
+          ${cardio ? etapasHTML(e.etapas) : notasEx(e, b) + avisoMais(e)}
           <div id="sets" class="sets">${linhasHTML(e, undefined, b)}</div>
           ${cardio ? '' : legendaSeries(e)}
           <p class="hint">${cardio ? APARELHOS[e.aparelho].dica : `Os pesos em cinza já vêm calculados. Embaixo de cada letra fica o descanso depois da série, em segundos: toque para mudar. RIR: quantas repetições ainda daria para fazer antes da falha. Toque em ${icon('mais', 14)} quando ainda dava para fazer muito mais: é o sinal para subir a carga.`}</p>
@@ -2356,7 +2395,7 @@ function iniciarTreino(id) {
     treinoId: t.id, nome: t.nome.trim() || 'Treino', inicio: Date.now(),
     // Uma cópia de cada item do treino (meta, descansos, séries A e P, F, bi-set e observação), mais exId:
     // o exercício da Biblioteca, que guarda os dados de todos os treinos em que ele aparece
-    exercicios: itens.map(e => ({ ...e, ...(!ehCardio(e) && { nome: e.nome.trim() }), exId: achar(e).id, feito: false, sets: [] })),
+    exercicios: itens.map(e => ({ ...e, ...(ehCardio(e) ? { etapas: limparEtapas(e.etapas) } : { nome: e.nome.trim() }), exId: achar(e).id, feito: false, sets: [] })),
   };
   // Musculação começa com as séries de trabalho do plano (as de aquecimento e preparação entram ao abrir o exercício);
   // o cardio, com tantos trechos quanto da última vez (no mínimo um)
@@ -2376,7 +2415,7 @@ async function concluirTreino() {
     const series = e.sets.filter(x => x.feita).map(({ feita, ...linha }) => linha);
     // Cardio guarda o peso e a altura do dia, para as calorias do histórico não mudarem depois
     return ehCardio(e)
-      ? { exId: e.exId, tipo: 'cardio', aparelho: e.aparelho, meta: e.meta, series, corpo: corpoAtual() }
+      ? { exId: e.exId, tipo: 'cardio', aparelho: e.aparelho, etapas: e.etapas, series, corpo: corpoAtual() }
       : { exId: e.exId, nome: e.nome, metaSeries: e.series, metaReps: e.reps, series };
   }).filter(e => e.series.some(ehTrabalho)); // só aquecimento e preparação não vira registro
   if (!exs.length) {
@@ -2438,6 +2477,42 @@ function escolherAparelho(tid, id, aparelho, botao) {
   e.aparelho = aparelho;
   botao.parentElement.querySelectorAll('.opt').forEach(b => b.setAttribute('aria-pressed', String(b === botao)));
   salvar();
+}
+
+// Estágios da meta do cardio no editor (a tela mostra uma caixa vazia quando não há nenhum guardado)
+function focarEtapa(id, i) {
+  const el = document.querySelector(`[data-f="e-etapa"][data-id="${CSS.escape(id)}"][data-i="${i}"]`);
+  el?.focus();
+  el?.setSelectionRange(el.value.length, el.value.length);
+}
+function adicionarEtapa(tid, id) {
+  const e = exDoTreino(tid, id);
+  if (!e || e.etapas.length >= ETAPAS_MAX) return;
+  if (!e.etapas.length) e.etapas.push(''); // a caixa vazia que já estava na tela
+  e.etapas.push('');
+  salvarAgora();
+  render();
+  focarEtapa(id, e.etapas.length - 1);
+}
+function apagarEtapa(tid, id, i) {
+  const e = exDoTreino(tid, id);
+  if (e?.etapas.length > 1) comDesfazer(`Estágio ${i + 1} removido`, () => e.etapas.splice(i, 1), render, () => { render(); focarEtapa(id, Math.max(i - 1, 0)); });
+}
+// O texto da caixa com "novo" no lugar do que está selecionado (ou onde está o cursor)
+const comTexto = (el, novo) => el.value.slice(0, el.selectionStart) + novo + el.value.slice(el.selectionEnd);
+// Troca o estágio da caixa pelo texto dividido em Enter ou → (digitado ou colado) e põe o cursor na última caixa.
+// Linha vazia no meio não vira caixa; no fim, sim (Enter no fim do texto abre a caixa seguinte)
+function dividirEtapa(el, texto) {
+  const e = exDoTreino(el.dataset.t, el.dataset.id), i = +el.dataset.i;
+  if (!e) return;
+  const partes = texto.split(SEPARA_ETAPAS).map(s => s.slice(0, ETAPA_MAX));
+  const novas = partes.filter((s, j) => s || j === partes.length - 1);
+  e.etapas.splice(i, 1, ...novas);
+  const cortados = e.etapas.splice(ETAPAS_MAX).length;
+  salvarAgora();
+  render();
+  focarEtapa(e.id, Math.min(i + novas.length, ETAPAS_MAX) - 1);
+  if (cortados) toast(`Cabem até ${ETAPAS_MAX} estágios: ${plural(cortados, 'ficou de fora', 'ficaram de fora')}.`);
 }
 
 // Programas salvos: voltar a usar (os treinos de agora ficam salvos no lugar) e apagar
@@ -3099,6 +3174,8 @@ document.addEventListener('click', ev => {
     case 'add-ex': adicionarItem(t, novoExercicio()); break;
     case 'add-cardio': adicionarItem(t, novoCardio()); break;
     case 'aparelho': escolherAparelho(t, id, b.dataset.a, b); break;
+    case 'etapa-add': adicionarEtapa(t, id); break;
+    case 'etapa-apagar': apagarEtapa(t, id, +i); break;
     case 'dia': alternarDia(t, +d, b); break;
     case 'apagar-treino': {
       const tr = treinoPorId(t);
@@ -3153,11 +3230,12 @@ function aplicarCampo(el) {
   const { f } = el.dataset;
   const v = el.value.trim();
   if (f.startsWith('r-')) return guardarDescanso(obj, f.slice(2), v, el);
-  if (k === 'nome' || k === 'foco' || k === 'meta' || k === 'obs') obj[k] = el.value;
+  if (k === 'nome' || k === 'foco' || k === 'obs') obj[k] = el.value;
   else if (f === 'e-reps') { if (v) obj.reps = textoReps(v); }
   else if (f === 'e-series') obj.series = clampInt(v, 1, 99, obj.series);
   else if (f === 'e-descanso') obj.descanso = clampInt(v, 5, 600, obj.descanso);
   else if (f === 'e-preparo') { if (temChave(PLANOS, v)) obj.preparo = v; }
+  else if (f === 'e-etapa') obj.etapas[+el.dataset.i] = el.value;
   else if (f === 'g-inicio') obj.inicio = lerDataISO(v);
   else obj[k] = lerCampo(k, v); // séries, trechos, peso e altura
   salvar();
@@ -3177,9 +3255,18 @@ document.addEventListener('input', ev => {
   if (!el.dataset?.f) return;
   // O descanso e o seu peso gravam quando a pessoa termina de digitar (change)
   if (el.dataset.f.startsWith('r-') || el.dataset.f === 'p-peso') return;
+  if (el.dataset.f === 'e-etapa' && SEPARA_ETAPAS.test(el.value)) return dividirEtapa(el, el.value); // Enter ou →
   aplicarCampo(el);
   if (/^[sp]-/.test(el.dataset.f)) atualizarCalc();
   if (el.dataset.f === 's-peso') atualizarPreparo(+el.dataset.i);
+});
+
+// Colar vários estágios de uma vez (um por linha, ou com →): cada um vai para uma caixa, mesmo passando do limite de uma
+document.addEventListener('paste', ev => {
+  const el = ev.target, colado = (ev.clipboardData?.getData('text') ?? '').trimEnd(); // a quebra de linha do fim não vira caixa
+  if (el.dataset?.f !== 'e-etapa' || !SEPARA_ETAPAS.test(colado)) return;
+  ev.preventDefault();
+  dividirEtapa(el, comTexto(el, colado));
 });
 
 // Nome do exercício na Biblioteca: renomeia ao sair do campo (ou ao apertar Enter). Grupo muscular: muda na hora
@@ -3216,6 +3303,8 @@ document.addEventListener('focusout', ev => {
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Enter' && ev.target.id === 'drive-url') return conectarDrive(ev.target.value);
   if (ev.key === 'Enter' && ev.target.id === 'peso-kg') return registrarPeso();
+  // Enter no estágio abre a caixa seguinte (também com a caixa cheia, quando a quebra de linha não caberia)
+  if (ev.key === 'Enter' && ev.target.dataset?.f === 'e-etapa' && !ev.isComposing) { ev.preventDefault(); return dividirEtapa(ev.target, comTexto(ev.target, '\n')); }
   // Mantém o Tab dentro do diálogo ou da janela do exercício abertos
   if (ev.key === 'Tab') {
     const modal = $('.dlg') || $('.sheet');
