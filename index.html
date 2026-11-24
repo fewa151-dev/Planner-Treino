@@ -103,12 +103,15 @@ h2{font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
 .field::placeholder{color:var(--placeholder)}
 /* Nas séries, o valor apagado é o da última vez: some ao tocar no campo, para digitar o novo */
 .set-row .field:focus::placeholder{color:transparent}
-/* RIR com o botão "ainda dava para fazer muito mais" ao lado (sinal para subir a carga) */
-.com-marca{display:flex;gap:4px;min-width:0}
-.com-marca .field{flex:1}
-.marca-mais{flex:none;width:30px;height:44px;border-radius:var(--r-sm);background:var(--raised);color:var(--muted);display:grid;place-items:center;transition:background .15s,color .15s}
-.marca-mais:hover{color:var(--text)}
-.marca-mais[aria-pressed="true"]{background:var(--second);color:var(--second-ink)}
+/* Marcas da série, embaixo dos campos: foi até a falha, peso mínimo do aparelho e "ainda dava para fazer muito mais" */
+.set-marcas{grid-column:2 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.marca-serie{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 11px;border-radius:999px;background:var(--raised);color:var(--muted);font-size:12px;font-weight:600;transition:background .15s,color .15s}
+.marca-serie:hover{color:var(--text)}
+.marca-serie[aria-pressed="true"]{background:var(--second);color:var(--second-ink)}
+.marca-serie.m-falha[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.marca-serie.m-minimo[aria-pressed="true"]{background:var(--inv-bg);color:var(--inv-ink)}
+.tag-hist{margin-left:6px;font-size:11px;font-weight:600;color:var(--accent)}
+.tag-hist.minimo{color:var(--muted)}
 .aviso-mais{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--second-soft);font-size:13px;line-height:1.4}
 .aviso-mais svg,.mais-hist{flex:none;color:var(--second)}
 .mais-hist{display:inline-grid;vertical-align:-2px;margin-left:4px}
@@ -527,7 +530,7 @@ const lerAltura = s => { const n = parseFloat(s.replace(',', '.')); return n > 3
 const CAMPOS = {
   peso: { rotulo: 'Peso (kg)', aria: 'Peso em kg', max: 999, decimal: true },
   reps: { rotulo: 'Reps', aria: 'Repetições', max: 999 },
-  rir: { rotulo: 'RIR', aria: 'RIR', max: 99, marca: true }, // marca: botão "ainda dava para fazer muito mais" ao lado
+  rir: { rotulo: 'RIR', aria: 'RIR', max: 99 },
   km: { rotulo: 'Km', aria: 'Distância em km', max: 999, decimal: true },
   min: { rotulo: 'Tempo (min)', aria: 'Tempo em minutos', max: 999, decimal: true, ler: lerTempo, aceita: /[^\d.,:]/g,
     mostrar: v => Number.isInteger(v) ? fmtNum(v) : fmtTempo(v * 60) }, // 15,5 aparece como 15:30, igual ao painel
@@ -871,7 +874,8 @@ function* itensNomeados(d, salvos = false) {
 // Registro da Biblioteca de um item (de treino, da sessão, do histórico ou de um backup)
 const registro = (x, id = uid(), arquivado = false) => ehCardio(x)
   ? { id, tipo: 'cardio', aparelho: APARELHOS[x.aparelho] ? x.aparelho : 'esteira', arquivado }
-  : { id, nome: nomeOuPadrao(x), arquivado, grupo: grupoValido(x.grupo) ? x.grupo : grupoPeloNome(x.nome) };
+  : { id, nome: nomeOuPadrao(x), arquivado, grupo: grupoValido(x.grupo) ? x.grupo : grupoPeloNome(x.nome),
+    ...(lerCampo('peso', x.pesoMin) > 0 && { pesoMin: lerCampo('peso', x.pesoMin) }) }; // pesoMin: o menor peso do aparelho
 // Índice por chave: acha o registro de um item e cria o que falta (novo = o registro a incluir, se já existe um)
 function indiceBiblioteca(d) {
   const porChave = new Map(d.biblioteca.map(ex => [chaveDe(ex), ex]));
@@ -996,6 +1000,8 @@ function normalizar(d) {
   const linhas = (lista, campos, comFeita) => objetos(lista).map(s => ({
     ...Object.fromEntries(campos.map(k => [k, lerCampo(k, s[k])])),
     ...(s.mais === true && { mais: true }), // "ainda dava para fazer muito mais" (só guardado quando marcado)
+    ...(s.falhou === true && { falhou: true }), // foi até a falha de verdade (marcado na série)
+    ...(s.minimo === true && { minimo: true }), // era o peso mínimo do aparelho: não dava para usar menos
     // Aquecimento ou preparação, com a % da carga de trabalho (as séries de trabalho não levam tipo)
     ...((s.tipo === 'A' || s.tipo === 'P') && { tipo: s.tipo, pct: clampInt(s.pct, 1, 100, s.tipo === 'A' ? 40 : 80) }),
     ...(comFeita && { feita: !!s.feita }),
@@ -1379,7 +1385,7 @@ function kcalDoRegistro(h) {
 const MARCA_MAIS = `<span class="mais-hist" role="img" aria-label="ainda dava para fazer muito mais" title="Ainda dava para fazer muito mais">${icon('mais', 15)}</span>`;
 function histForca(e, titulo = esc(nomeItem(exPorId(e.exId) || e))) {
   return `<div class="hist-ex"><h3>${titulo}</h3><ol class="hist-sets">${e.series.map(s => `
-    <li${s.tipo ? ' class="preparo"' : ''}><span class="muted" title="${NOME_TIPO[tipoSerie(s)]}">${tipoSerie(s)}</span><span>${comUnidade(s.peso, 'kg')}</span><span>${comUnidade(s.reps, 'reps')}</span><span class="muted">${vazio(s.rir) ? '' : 'RIR ' + s.rir}${s.mais ? MARCA_MAIS : ''}</span></li>`).join('')}
+    <li${s.tipo ? ' class="preparo"' : ''}><span class="muted" title="${NOME_TIPO[tipoSerie(s)]}">${tipoSerie(s)}</span><span>${comUnidade(s.peso, 'kg')}</span><span>${comUnidade(s.reps, 'reps')}</span><span class="muted">${vazio(s.rir) ? '' : 'RIR ' + s.rir}${s.falhou ? '<span class="tag-hist" title="Foi até a falha">falha</span>' : ''}${s.minimo ? '<span class="tag-hist minimo" title="Peso mínimo do aparelho">mín.</span>' : ''}${s.mais ? MARCA_MAIS : ''}</span></li>`).join('')}
   </ol></div>`;
 }
 
@@ -1526,7 +1532,7 @@ function viewExercicio(ex) {
         <p class="small muted">${esc(textoSituacao(situacao))}</p>
         ${cardio ? '' : `<label class="grupo-ex"><span>Grupo muscular</span><select class="field" id="ex-grupo">${Object.entries(GRUPOS).map(([k, nome]) =>
           `<option value="${k}"${ex.grupo === k ? ' selected' : ''}>${nome}</option>`).join('')}</select></label>
-        <p class="small muted">Com as séries A e P em Automático, o primeiro exercício de cada grupo no dia recebe o aquecimento (A).</p>`}
+        <p class="small muted">O aquecimento (A) vai para o primeiro exercício de cada grupo que você fizer no dia, mesmo fora da ordem da lista.</p>`}
       </div>
       <div class="actions">
         <button class="btn ghost small" data-act="lib-exportar" data-id="${id}">${icon('baixar', 18)} Exportar dados</button>
@@ -1991,21 +1997,47 @@ function cargaDeTrabalho(e, anteriores) {
 // repetições = as da última vez nessa mesma série
 function sugestaoPreparo(e, anteriores, s, base = cargaDeTrabalho(e, anteriores)) {
   const antes = anteriores.find(x => x.tipo === s.tipo && x.pct === s.pct);
-  return { peso: base ? Math.min(base, de5em5(base * s.pct / 100)) : '', reps: antes?.reps ?? REPS_PREPARO[s.pct] ?? '', rir: '' };
+  // Nunca abaixo do peso mínimo do aparelho, quando ele já foi marcado numa série desse exercício
+  const min = exPorId(e.exId)?.pesoMin || 0;
+  return { peso: base ? Math.min(base, Math.max(min, de5em5(base * s.pct / 100))) : '', reps: antes?.reps ?? REPS_PREPARO[s.pct] ?? '', rir: '' };
 }
 
-// Antes das séries de trabalho entram as de aquecimento e preparação escolhidas no treino. Em Automático, pela ordem
-// do exercício no grupo muscular de hoje (conta quem já tem série feita, então vale a ordem em que você faz).
+// Antes das séries de trabalho entram as de aquecimento e preparação. Elas seguem a ordem em que você faz os
+// exercícios de cada grupo muscular hoje, não a ordem da lista: o aquecimento é de quem abre o grupo.
+// - Exercício em Automático: o 1º do grupo feito hoje tem A + 2 P, o 2º tem 2 P e, do 3º em diante, 1 P (PREPARO).
+// - Exercício com séries escolhidas no treino: o plano dele vale quando ele é feito na posição da lista. Se o 1º do
+//   grupo na lista ficou para depois (aparelho ocupado, por exemplo), quem abre o grupo hoje leva as séries do 1º
+//   da lista (o aquecimento), e o 1º da lista, quando vier, leva as séries de quem tomou o lugar dele.
 // Refaz enquanto o exercício não foi começado: nenhuma série marcada e nenhuma série A ou P preenchida.
 const grupoNaSessao = e => { const g = exPorId(e.exId)?.grupo; return g && g !== 'outro' ? g : `ex:${e.exId}`; };
-function jaFeitosDoGrupo(e) {
+const comecado = e => e.sets.some(s => s.feita);
+// Séries A e P de um exercício hoje: { plano (chave de PLANOS), troca (o exercício de quem ele herdou o plano) }
+function preparoDeHoje(e) {
   const grupo = grupoNaSessao(e);
-  return S.sessao.exercicios.filter(x => x !== e && !ehCardio(x) && grupoNaSessao(x) === grupo && x.sets.some(s => s.feita)).length;
+  const doGrupo = S.sessao.exercicios.filter(x => !ehCardio(x) && grupoNaSessao(x) === grupo);
+  const outros = doGrupo.filter(x => x !== e && comecado(x));
+  const automatico = PREPARO[Math.min(outros.length, PREPARO.length - 1)];
+  if (!e.preparo) return { plano: automatico };
+  const previsto = x => x.preparo || PREPARO[Math.min(Math.max(0, doGrupo.indexOf(x)), PREPARO.length - 1)];
+  const primeiro = doGrupo[0];
+  if (!outros.length && e !== primeiro) return { plano: previsto(primeiro), troca: primeiro }; // abre o grupo no lugar do 1º
+  if (outros.length && e === primeiro && !comecado(e)) return { plano: previsto(outros[0]), troca: outros[0] }; // veio depois
+  return { plano: e.preparo };
+}
+// Lembrete no topo da janela quando as séries A e P vieram de outro exercício do grupo (só antes de começar)
+function notaTroca(e) {
+  if (ehCardio(e) || comecado(e)) return '';
+  const { plano, troca } = preparoDeHoje(e);
+  if (!troca || plano === e.preparo) return '';
+  const grupo = GRUPOS[exPorId(e.exId)?.grupo]?.toLowerCase() || 'este grupo';
+  return troca === S.sessao.exercicios.filter(x => grupoNaSessao(x) === grupoNaSessao(e))[0]
+    ? `Primeiro exercício de ${grupo} hoje: as séries A e P são as de ${nomeItem(troca)} (${PLANOS[plano].nome}).`
+    : `${nomeItem(troca)} já abriu ${grupo} hoje: as séries A e P ficam ${PLANOS[plano].nome}.`;
 }
 // Devolve true se as séries mudaram
 function planejarPreparo(e) {
   if (ehCardio(e) || e.sets.some(s => s.feita || (s.tipo && (!vazio(s.peso) || !vazio(s.reps))))) return false;
-  const plano = PLANOS[e.preparo || PREPARO[Math.min(jaFeitosDoGrupo(e), PREPARO.length - 1)]].series, atual = e.sets.filter(s => s.tipo);
+  const plano = PLANOS[preparoDeHoje(e).plano].series, atual = e.sets.filter(s => s.tipo);
   if (plano.length === atual.length && plano.every(([tipo, pct], i) => atual[i].tipo === tipo && atual[i].pct === pct)) return false;
   e.sets = [...plano.map(([tipo, pct]) => ({ ...novaLinha(e, 0), tipo, pct })), ...trabalho(e)];
   return true;
@@ -2031,9 +2063,17 @@ function linhasHTML(e, anteriores = ultimasSeries(e.exId), b = parDoBiset(e)) {
     const c = CAMPOS[k], alvo = `data-f="s-${k}" data-i="${i}" aria-label="${c.aria}, ${nomes[i]}"`;
     if (c.opcoes) return `<select class="field" ${alvo}>${Object.entries(c.opcoes).map(([v, o]) => `<option value="${v}"${s[k] === v ? ' selected' : ''}>${o.nome}</option>`).join('')}</select>`;
     if (s.tipo && k === 'rir') return '<span></span>'; // aquecimento e preparação ficam longe da falha: sem RIR
-    const entrada = `<input class="field num" inputmode="${c.decimal ? 'decimal' : 'numeric'}" ${alvo} value="${mostrarCampo(k, s[k])}" placeholder="${mostrarCampo(k, ph[k]) || '–'}">`;
-    return !c.marca ? entrada : `<span class="com-marca">${entrada}<button class="marca-mais" data-act="mais" data-i="${i}" aria-pressed="${!!s.mais}"
-      aria-label="${cap(nomes[i])}: ainda dava para fazer muito mais" title="Ainda dava para fazer muito mais">${icon('mais', 16)}</button></span>`;
+    return `<input class="field num" inputmode="${c.decimal ? 'decimal' : 'numeric'}" ${alvo} value="${mostrarCampo(k, s[k])}" placeholder="${mostrarCampo(k, ph[k]) || '–'}">`;
+  };
+  // Marcas embaixo da série: na de trabalho, falha, peso mínimo e "dava muito mais"; na A e na P, só o peso mínimo
+  const marcas = (s, i) => {
+    const botao = (act, cls, ligado, texto, aria) =>
+      `<button class="marca-serie ${cls}" data-act="${act}" data-i="${i}" aria-pressed="${!!ligado}" aria-label="${cap(nomes[i])}: ${aria}">${texto}</button>`;
+    return `<div class="set-marcas">${[
+      !s.tipo && botao('falhou', 'm-falha', s.falhou, 'Até a falha', 'foi até a falha'),
+      botao('minimo', 'm-minimo', s.minimo, 'Peso mín.', 'era o peso mínimo do aparelho, não dava para usar menos'),
+      !s.tipo && botao('mais', 'm-mais', s.mais, `${icon('mais', 14)} Dava mais`, 'ainda dava para fazer muito mais'),
+    ].filter(Boolean).join('')}</div>`;
   };
   const lado = (s, i) => {
     if (cardio) return `<span class="set-n num">${i + 1}</span>`;
@@ -2050,7 +2090,7 @@ function linhasHTML(e, anteriores = ultimasSeries(e.exId), b = parDoBiset(e)) {
     e.sets.map((s, i) => `<div class="set-grid set-row${s.feita ? ' done' : ''}${s.tipo ? ' preparo' : ''}${s === falha ? ' falha' : ''}" ${colunas}>
         ${lado(s, i)}${campos.map(campo(s, i, sugestao(e, anteriores, i))).join('')}
         <button class="check" data-act="serie-feita" data-i="${i}" aria-pressed="${s.feita}" aria-label="${cap(nomes[i])} ${t.feita}">${icon('check')}</button>
-        ${cardio ? `<div class="trecho-calc" data-tc="${i}"></div>` : ''}
+        ${cardio ? `<div class="trecho-calc" data-tc="${i}"></div>` : marcas(s, i)}
       </div>`).join('') +
     `<div class="dupla">
       <button class="add-btn" data-act="remover-serie"${trabalho(e).length > 1 ? '' : ' disabled'}>− Remover ${t.linha}</button>
@@ -2144,6 +2184,7 @@ function notasEx(e, b = parDoBiset(e)) {
       : `Bi-set com ${nome}: o descanso do par vem depois desta, e o app volta para o outro.`),
     e.falha && (semana >= SEMANA_FALHA ? 'F: a última série de trabalho vai até a falha.'
       : `F a partir da semana ${SEMANA_FALHA}. Agora é a semana ${Math.max(1, semana)}: pare com 1 ou 2 repetições sobrando.`),
+    notaTroca(e),
     e.obs,
   ].filter(Boolean);
   return notas.length ? `<ul class="notas-ex">${notas.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : '';
@@ -2172,7 +2213,7 @@ function abrirEx(id) {
           ${cardio ? etapasHTML(e.etapas) : notasEx(e, b) + avisoMais(e)}
           <div id="sets" class="sets">${linhasHTML(e, undefined, b)}</div>
           ${cardio ? '' : legendaSeries(e)}
-          <p class="hint">${cardio ? APARELHOS[e.aparelho].dica : `Os pesos em cinza já vêm calculados. Embaixo de cada letra fica o descanso depois da série, em segundos: toque para mudar. RIR: quantas repetições ainda daria para fazer antes da falha. Toque em ${icon('mais', 14)} quando ainda dava para fazer muito mais: é o sinal para subir a carga.`}</p>
+          <p class="hint">${cardio ? APARELHOS[e.aparelho].dica : `Os pesos em cinza já vêm calculados. Embaixo de cada letra fica o descanso depois da série, em segundos: toque para mudar. RIR: quantas repetições ainda daria para fazer antes da falha. Embaixo de cada série: Até a falha, quando não saía mais nenhuma repetição; Peso mínimo, quando não dava para usar menos peso no aparelho; Dava muito mais, o sinal para subir a carga.`}</p>
         </div>
         ${cardio ? `<div class="calc-col"><div class="calc" id="calc"></div>${corpoHTML(e.aparelho)}</div>` : timerHTML()}
       </div>
@@ -2202,6 +2243,8 @@ function marcarSerie(i) {
   if (s.feita) { s.feita = false; salvar(); return redesenharSeries(anteriores); }
   const ph = sugestao(e, anteriores, i);
   for (const k in ph) if (vazio(s[k]) && !vazio(ph[k])) s[k] = ph[k];
+  const min = !ehCardio(e) && exPorId(e.exId)?.pesoMin;
+  if (min && typeof s.peso === 'number' && s.peso <= min) s.minimo = true; // feita com o peso mínimo do aparelho
   s.feita = true;
   salvar();
   if (ehCardio(e)) return redesenharSeries(anteriores); // só a musculação tem descanso
@@ -2219,8 +2262,39 @@ function alternarMais(i) {
   const s = exAberto()?.sets[i];
   if (!s) return;
   s.mais = !s.mais;
+  if (s.mais) delete s.falhou; // as duas marcas não valem juntas
   salvar();
   redesenharSeries();
+}
+
+// "Até a falha": a série acabou porque não saía mais nenhuma repetição (RIR 0). Separa a falha de verdade
+// da estimativa de RIR na análise. Desmarcar tira o RIR 0 que a marca pôs.
+function alternarFalha(i) {
+  const s = exAberto()?.sets[i];
+  if (!s) return;
+  s.falhou = !s.falhou;
+  if (s.falhou) { s.rir = 0; delete s.mais; } else { delete s.falhou; if (s.rir === 0) s.rir = ''; }
+  salvar();
+  redesenharSeries();
+}
+
+// "Peso mínimo": não dava para usar menos peso, porque era o menor do aparelho (crossover com 10 kg, por exemplo).
+// O app guarda esse peso no exercício da Biblioteca: as séries A e P não sugerem menos que ele, e uma série feita
+// com esse peso já entra marcada. Desmarcar na série com esse peso esquece o mínimo.
+function alternarMinimo(i) {
+  const e = exAberto(), s = e?.sets[i], ex = e && exPorId(e.exId);
+  if (!s) return;
+  const anteriores = ultimasSeries(e.exId);
+  if (vazio(s.peso)) s.peso = sugestao(e, anteriores, i).peso ?? '';
+  s.minimo = !s.minimo;
+  if (s.minimo) {
+    if (ex && typeof s.peso === 'number' && s.peso > 0) ex.pesoMin = s.peso;
+  } else {
+    delete s.minimo;
+    if (ex && ex.pesoMin === s.peso) delete ex.pesoMin;
+  }
+  salvar();
+  redesenharSeries(anteriores);
 }
 
 // Lembrete ao abrir o exercício, se na última vez alguma série ficou fácil
@@ -2581,7 +2655,7 @@ function aplicarBackup(d, msg) {
 
 /* ---------- Planilha CSV (para planilhas e para análise com IA) ---------- */
 // Uma linha por série ou trecho; colunas que não valem para o tipo ficam vazias. Números com ponto, como pede o CSV.
-const COLUNAS_CSV = ['data', 'hora', 'treino', 'exercicio', 'grupo_muscular', 'tipo', 'serie_ou_trecho', 'tipo_serie', 'peso_kg', 'repeticoes', 'rir', 'dava_muito_mais',
+const COLUNAS_CSV = ['data', 'hora', 'treino', 'exercicio', 'grupo_muscular', 'tipo', 'serie_ou_trecho', 'tipo_serie', 'peso_kg', 'repeticoes', 'rir', 'ate_falha', 'peso_minimo', 'dava_muito_mais',
   'distancia_km', 'tempo_min', 'inclinacao_pct', 'degraus', 'esforco', 'velocidade_kmh', 'ritmo_min_por_km', 'degraus_por_min',
   'kcal_estimadas', 'peso_corporal_kg'];
 const arred2 = v => Math.round(v * 100) / 100; // duas casas, no CSV e na planilha do Drive
@@ -2601,7 +2675,7 @@ function linhasCSV(exId) {
     const base = { exId: e.exId, data: dataISO(h.inicio), hora: fmtHora(h.inicio), treino: h.nome, exercicio: nomeItem(porId.get(e.exId) || e), grupo_muscular: ehCardio(e) ? '' : GRUPOS[porId.get(e.exId)?.grupo] ?? '', tipo: ehCardio(e) ? 'cardio' : 'musculacao' };
     if (!ehCardio(e)) {
       const n = { A: 0, P: 0, T: 0 }; // número da série dentro do tipo: trabalho 1, 2, 3 (como nos arquivos antigos)
-      e.series.forEach(s => linhas.push({ ...base, serie_ou_trecho: ++n[tipoSerie(s)], tipo_serie: NOME_TIPO[tipoSerie(s)].toLowerCase(), peso_kg: s.peso, repeticoes: s.reps, rir: s.rir, dava_muito_mais: s.mais ? 'sim' : '' }));
+      e.series.forEach(s => linhas.push({ ...base, serie_ou_trecho: ++n[tipoSerie(s)], tipo_serie: NOME_TIPO[tipoSerie(s)].toLowerCase(), peso_kg: s.peso, repeticoes: s.reps, rir: s.rir, ate_falha: s.falhou ? 'sim' : '', peso_minimo: s.minimo ? 'sim' : '', dava_muito_mais: s.mais ? 'sim' : '' }));
       continue;
     }
     const corpo = corpoDe(e), c = contaCardio(e, e.series, corpo);
@@ -2760,7 +2834,7 @@ async function fazerBackup({ manual = false, substituir = false, avisarErro = ma
    uma linha por série ou trecho. Só vão as abas que mudaram desde a última vez (o resumo de cada uma fica em DR.abas). */
 const ABA_INDICE = 'Exercícios', ABA_PESO = 'Peso corporal';
 const TITULOS_PLANILHA = {
-  data: 'Data', hora: 'Hora', treino: 'Treino', serie_ou_trecho: 'Série', tipo_serie: 'Tipo de série', peso_kg: 'Peso (kg)', repeticoes: 'Repetições', rir: 'RIR',
+  data: 'Data', hora: 'Hora', treino: 'Treino', serie_ou_trecho: 'Série', tipo_serie: 'Tipo de série', peso_kg: 'Peso (kg)', repeticoes: 'Repetições', rir: 'RIR', ate_falha: 'Até a falha', peso_minimo: 'Peso mínimo',
   dava_muito_mais: 'Dava muito mais', distancia_km: 'Distância (km)', tempo_min: 'Tempo (min)', inclinacao_pct: 'Inclinação (%)',
   degraus: 'Degraus', esforco: 'Esforço', velocidade_kmh: 'Velocidade (km/h)', ritmo_min_por_km: 'Ritmo (min/km)',
   degraus_por_min: 'Degraus por min', kcal_estimadas: 'Kcal estimadas', peso_corporal_kg: 'Peso corporal (kg)',
@@ -3146,6 +3220,8 @@ document.addEventListener('click', ev => {
     case 'fechar-ex': fecharEx(); break;
     case 'serie-feita': marcarSerie(+i); break;
     case 'mais': alternarMais(+i); break;
+    case 'falhou': alternarFalha(+i); break;
+    case 'minimo': alternarMinimo(+i); break;
     case 'add-serie': adicionarSerie(); break;
     case 'remover-serie': removerSerie(); break;
     // Liga e desliga, no exercício do treino: prioridade, F e bi-set (o bi-set redesenha, para mostrar o par)
