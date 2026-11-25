@@ -535,7 +535,7 @@ const CAMPOS = {
   min: { rotulo: 'Tempo (min)', aria: 'Tempo em minutos', max: 999, decimal: true, ler: lerTempo, aceita: /[^\d.,:]/g,
     mostrar: v => Number.isInteger(v) ? fmtNum(v) : fmtTempo(v * 60) }, // 15,5 aparece como 15:30, igual ao painel
   incl: { rotulo: 'Incl. (%)', aria: 'Inclinação em %', max: 40, decimal: true },
-  degraus: { rotulo: 'Degraus', aria: 'Degraus', max: 99999 },
+  degraus: { rotulo: 'Degraus/min', aria: 'Degraus por minuto', max: 999 }, // escada: o ritmo, como no painel (o total sai da conta)
   altura: { max: 2.5, decimal: true, ler: lerAltura },
   esforco: { rotulo: 'Esforço', aria: 'Esforço', opcoes: ESFORCOS, padrao: 'moderado' },
 };
@@ -627,19 +627,19 @@ const APARELHOS = {
   },
   escada: {
     nome: 'Escada', campos: ['min', 'degraus'],
-    dica: 'Copie do painel o tempo, em minutos (15,5 ou 15:30), e os degraus.',
-    vazio: 'Preencha tempo e degraus de um trecho para ver o ritmo e as calorias.',
-    como: 'Estimativa pelo ritmo nos degraus e pelo seu peso.',
-    conta({ min, degraus }, { peso }) {
-      if (!(min > 0 && degraus > 0)) return null;
-      const ritmo = degraus / min;
+    dica: 'Copie do painel o tempo, em minutos (15,5 ou 15:30), e os degraus por minuto.',
+    vazio: 'Preencha o tempo e os degraus por minuto de um trecho para ver o total de degraus e as calorias.',
+    como: 'Estimativa pelos degraus por minuto e pelo seu peso.',
+    // No trecho, "degraus" é o ritmo (degraus por minuto); o total de degraus é ritmo × tempo
+    conta({ min, degraus: ritmo }, { peso }) {
+      if (!(min > 0 && ritmo > 0)) return null;
       // Equação do ACSM para degraus, só subindo: 0,2 × ritmo + 1,8 × altura do degrau × ritmo + 3,5 (mL/kg/min)
-      return { ritmo, kcal: kcal((0.2 * ritmo + 1.8 * DEGRAU_M * ritmo + 3.5) / 3.5, peso, min) };
+      return { degraus: Math.round(ritmo * min), kcal: kcal((0.2 * ritmo + 1.8 * DEGRAU_M * ritmo + 3.5) / 3.5, peso, min) };
     },
-    trecho: c => `<span><b>${NUM0.format(c.ritmo)}</b> degraus/min</span>`,
+    trecho: c => `<span><b>${NUM0.format(c.degraus)}</b> degraus</span>`,
     resumo: (c, tempo) => `${NUM0.format(c.degraus)} degraus em ${tempo}`,
     quadro: (c, valor, tempo) => [['Degraus', valor(c.degraus, NUM0)], tempo, ['Andares', aprox(c.n ? andares(c.degraus) : null)]],
-    historico: (t, c) => [comUnidade(t.degraus, 'deg.'), tempoTxt(t.min), c ? `${NUM0.format(c.ritmo)}/min` : ''],
+    historico: (t, c) => [comUnidade(t.degraus, 'deg./min'), tempoTxt(t.min), c ? `${NUM0.format(c.degraus)} deg.` : ''],
     extras: c => [c.n && `${aprox(andares(c.degraus))} andares`],
     graficos: [
       { titulo: 'Degraus', sub: 'Degraus subidos em cada dia de treino.', valor: c => c.degraus, fmt: v => `${NUM0.format(v)} degraus` },
@@ -730,8 +730,8 @@ function contaCardio(e, trechos, corpo) {
   const total = k => validas.length && validas.every(c => c[k] != null) ? soma(validas.map(c => c[k])) : null;
   return {
     contas, n: validas.length,
-    min: soma(ok.map(t => t.min)), km: soma(ok.map(t => t.km)), degraus: soma(ok.map(t => t.degraus)),
-    kcal: total('kcal'), passos: total('passos'),
+    min: soma(ok.map(t => t.min)), km: soma(ok.map(t => t.km)),
+    kcal: total('kcal'), passos: total('passos'), degraus: total('degraus'),
   };
 }
 
@@ -742,7 +742,7 @@ function resumoCardio(e, trechos) {
 }
 
 /* ---------- Dados (salvos neste aparelho) ---------- */
-const VERSAO = 5; // 3: Biblioteca de exercícios (criada por sincronizarBiblioteca a cada carga); 4: séries A, P e T; 5: programa de 5 dias
+const VERSAO = 6; // 3: Biblioteca de exercícios (criada por sincronizarBiblioteca a cada carga); 4: séries A, P e T; 5: programa de 5 dias; 6: cardio de terça
 
 // Repetições são texto para aceitar faixas ("12–15"), tempo ("30–45 s / 15") e "por lado"
 const textoReps = v => String(v ?? '').trim().replace(/\s*-\s*/g, '–');
@@ -849,6 +849,7 @@ const treinosDoPrograma = (existente = () => null) => PROGRAMA.map(t => ({
 
 function exemplo() {
   const d = { v: VERSAO, treinos: treinosDoPrograma(), programa: { nome: NOME_PROGRAMA, inicio: null }, programas: [], sessao: null, historico: [], perfil: { peso: '', altura: '' }, pesos: [] };
+  cardioDeTerca(d); // o programa já com o cardio de terça
   sincronizarBiblioteca(d, []);
   podarBiblioteca(d);
   return d;
@@ -986,11 +987,20 @@ function programaNovo(d) {
   d.programa = { nome: NOME_PROGRAMA, inicio: null };
   arquivarQueSaiu(d, antes);
 }
+// Versão 6: o cardio do treino de terça vira escada com estes estágios, 16 min (sem cardio na terça, entra um no fim do treino)
+const CARDIO_TERCA = ['4 min a 40 degraus/min', '2 min a 60 degraus/min', '2 min a 40 degraus/min', '2 min a 60 degraus/min',
+  '2 min a 40 degraus/min', '2 min a 60 degraus/min', '2 min a 40 degraus/min'];
+function cardioDeTerca(d) {
+  const terca = d.treinos.filter(t => t.dias.includes(2)), cardios = terca.flatMap(t => t.exercicios.filter(ehCardio));
+  const c = cardios.find(e => e.aparelho === 'escada') ?? cardios[0], escada = { aparelho: 'escada', etapas: [...CARDIO_TERCA] };
+  if (c) Object.assign(c, escada);
+  else terca[0]?.exercicios.push({ ...novoCardio(), ...escada });
+}
 // Dados de antes da versão 5: o programa novo entrou (e os treinos que havia foram para Programas salvos)
 const antesDoPrograma = bruto => (Number(bruto?.v) || 1) < 5;
 
 // Migrações por versão: cada uma recebe os dados já validados da versão anterior, com a Biblioteca ligada
-const MIGRACOES = { 2: tirarExemploAntigo, 4: descansoDeTrabalho, 5: programaNovo };
+const MIGRACOES = { 2: tirarExemploAntigo, 4: descansoDeTrabalho, 5: programaNovo, 6: cardioDeTerca };
 
 function normalizar(d) {
   if (!d || typeof d !== 'object' || !Array.isArray(d.treinos)) return null;
@@ -2144,7 +2154,7 @@ function corpoHTML(aparelho) {
     <p class="hint">${comAltura ? 'Peso e altura ficam só neste aparelho e servem para as estimativas.' : 'O peso fica só neste aparelho e serve para estimar as calorias.'} Mudar o peso aqui registra o de hoje na aba Peso.</p>`;
 }
 
-// Único lugar que faz as contas na tela: a "razão" de cada trecho (velocidade e ritmo, ou degraus por minuto)
+// Único lugar que faz as contas na tela: o resultado de cada trecho (velocidade e ritmo, ou o total de degraus)
 // e o quadro da calculadora. Não mexe nos campos, para não perder o foco enquanto a pessoa digita.
 function atualizarCalc() {
   const e = exAberto(), box = $('#calc');
@@ -2682,9 +2692,9 @@ function linhasCSV(exId) {
     e.series.forEach((t, i) => {
       const r = c.contas[i] || {};
       linhas.push({
-        ...base, serie_ou_trecho: i + 1, distancia_km: t.km, tempo_min: t.min, inclinacao_pct: t.incl, degraus: t.degraus,
+        ...base, serie_ou_trecho: i + 1, distancia_km: t.km, tempo_min: t.min, inclinacao_pct: t.incl, degraus: r.degraus,
         esforco: ESFORCOS[t.esforco]?.nome, velocidade_kmh: r.vel, ritmo_min_por_km: e.aparelho === 'esteira' ? r.ritmo : null,
-        degraus_por_min: e.aparelho === 'escada' ? r.ritmo : null, kcal_estimadas: r.kcal, peso_corporal_kg: corpo.peso,
+        degraus_por_min: e.aparelho === 'escada' ? t.degraus : null, kcal_estimadas: r.kcal, peso_corporal_kg: corpo.peso,
       });
     });
   }
